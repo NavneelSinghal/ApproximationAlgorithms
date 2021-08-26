@@ -1,0 +1,221 @@
+\documentclass[a4paper]{article}
+\usepackage[english]{babel}
+\usepackage[a4paper,top=2cm,bottom=2cm,left=2cm,right=2cm,marginparwidth=1.75cm]{geometry}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+% \usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{import}
+\usepackage{pdfpages}
+\usepackage{transparent}
+\usepackage{xcolor}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+
+\usepackage{thmtools}
+\usepackage{enumitem}
+\usepackage[framemethod=TikZ]{mdframed}
+
+\usepackage{xpatch}
+
+\usepackage{boites}
+\makeatletter
+\xpatchcmd{\endmdframed}
+{\aftergroup\endmdf@trivlist\color@endgroup}
+{\endmdf@trivlist\color@endgroup\@doendpe}
+{}{}
+\makeatother
+
+%\usepackage[poster]{tcolorbox}
+%\allowdisplaybreaks
+%\sloppy
+
+\usepackage[many]{tcolorbox}
+
+\xpatchcmd{\proof}{\itshape}{\bfseries\itshape}{}{}
+
+% to set box separation
+\setlength{\fboxsep}{0.8em}
+\def\breakboxskip{7pt}
+\def\breakboxparindent{0em}
+
+\newenvironment{proof}{\begin{breakbox}\textit{Proof.}}{\hfill$\square$\end{breakbox}}
+\newenvironment{ans}{\begin{breakbox}\textit{Answer.}}{\end{breakbox}}
+\newenvironment{soln}{\begin{breakbox}\textit{Solution.}}{\end{breakbox}}
+
+% \tcolorboxenvironment{proof}{
+%     blanker,
+%     before skip=\topsep,
+%     after skip=\topsep,
+%     borderline={0.4pt}{0.4pt}{black},
+%     breakable,
+%     left=12pt,
+%     right=12pt,
+%     top=12pt,
+%     bottom=12pt,
+% }
+%
+% \tcolorboxenvironment{ans}{
+%     blanker,
+%     before skip=\topsep,
+%     after skip=\topsep,
+%     borderline={0.4pt}{0.4pt}{black},
+%     breakable,
+%     left=12pt,
+%     right=12pt,
+% }
+
+\mdfdefinestyle{enclosed}{
+    linecolor=black
+    ,backgroundcolor=none
+    ,apptotikzsetting={\tikzset{mdfbackground/.append style={fill=gray!100,fill opacity=.3}}}
+    ,frametitlefont=\sffamily\bfseries\color{black}
+    ,splittopskip=.5cm
+    ,frametitlebelowskip=.0cm
+    ,topline=true
+    ,bottomline=true
+    ,rightline=true
+    ,leftline=true
+    ,leftmargin=0.01cm
+    ,linewidth=0.02cm
+    ,skipabove=0.01cm
+    ,innerbottommargin=0.1cm
+    ,skipbelow=0.1cm
+}
+
+\mdfsetup{%
+    middlelinecolor=black,
+    middlelinewidth=1pt,
+roundcorner=4pt}
+
+\setlength{\parindent}{0pt}
+
+\mdtheorem[style=enclosed]{theorem}{Theorem}
+\mdtheorem[style=enclosed]{lemma}{Lemma}[theorem]
+\mdtheorem[style=enclosed]{claim}{Claim}[theorem]
+\mdtheorem[style=enclosed]{ques}{Question}
+\mdtheorem[style=enclosed]{defn}{Definition}
+\mdtheorem[style=enclosed]{notn}{Notation}
+\mdtheorem[style=enclosed]{obs}{Observation}
+\mdtheorem[style=enclosed]{eg}{Example}
+\mdtheorem[style=enclosed]{cor}{Corollary}
+\mdtheorem[style=enclosed]{note}{Note}
+
+% \let\thetheorem=\relax
+% \let\thelemma=\relax
+% \let\theclaim=\relax
+% \let\theques=\relax
+% \let\thedefn=\relax
+% \let\thenotn=\relax
+% \let\theobs=\relax
+% \let\thecor=\relax
+% \let\thenote=\relax
+
+% \renewcommand\qedsymbol{$\blacksquare$}
+\newcommand{\nl}{\vspace{0.2cm}\\}
+\newcommand{\ol}{\overline}
+\newcommand{\mc}{\mathcal}
+\newcommand{\mi}{\mathit}
+\newcommand{\mf}{\mathbf}
+\newcommand{\mb}{\mathbb}
+\renewcommand{\L}{\mc{L}}
+\newcommand{\changesto}{\vdash}
+\newcommand\Vtextvisiblespace[1][.3em]{%
+    \mbox{\kern.06em\vrule height.3ex}%
+    \vbox{\hrule width#1}%
+    \hbox{\vrule height.3ex}
+}
+\newcommand{\blank}{{\Vtextvisiblespace[0.7em]}}
+\newcommand{\leftend}{\triangleright}
+\newcommand{\comp}{\overline}
+
+\newcommand{\incfig}[1]{%
+    \def\svgwidth{\columnwidth}
+    \import{./figures/}{#1.pdf_tex}
+}
+\pdfsuppresswarningpagegroup=1
+
+\title{\textbf{Approximation Algorithms Lecture 2}}
+\date{}
+
+%\section{Recap}
+%
+%\section{Definitions}
+%
+%\begin{defn}
+%\end{defn}
+%
+%\section{Content}
+%
+%\begin{theorem}
+%\end{theorem}
+%\begin{proof}
+%\end{proof}
+%
+%\begin{ques}
+%\end{ques}
+%
+%\begin{eg}
+%\end{eg}
+%
+%\begin{claim}
+%\end{claim}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\section{Recap}
+
+\begin{defn}
+    \textbf{3CNF SAT}: We are given a satisfiability formula in 3CNF form (boolean formula with $\lor, \land, \lnot$) and we are interested in knowing if there is an assignment of T/F values to variables which makes the formula true.
+\end{defn}
+
+\begin{defn}
+    \textbf{3CNF MAX-SAT}: Given a 3CNF formula, find an assignment of T/F values to variables which maximises the number of clauses satisfied.
+\end{defn}
+
+\begin{eg}
+    $(x_1 \lor x_2 \lor \ol{x_3}) \land (\ol{x_2} \lor \ol{x_3} \lor \ol{x_4}) \land (\ol{x_1} \lor \ol{x_3} \lor x_4)$ is a formula in 3CNF form.
+\end{eg}
+
+\section{Content}
+
+The 3CNF MAX-SAT problem is NP-hard. We can however get a $\frac{7}{8}$ approximation using a polynomial-time algorithm.\nl
+
+\begin{theorem}
+    Given a formula $\phi$ with $m$ clauses, $\exists$ a polynomial-time algorithm which finds a boolean assignment satisfying at least $\frac{7}{8}m$ clauses.
+\end{theorem}
+
+\begin{proof}
+    Assign each variable independently a value of T/F with probability 1/2.
+    Consider a clause $C = (x_i \lor x_j \lor x_k)$. The probability that the clause is not satisfied is $\left(\frac{1}{2}\right)^3 = \frac{1}{8}$. Then the probability that the clause is satisfied
+    is $\frac{7}{8}$. So the expected number of clauses satisfied in a random assignment = $\frac{7}{8}m$.\nl
+    However this is just in expectation. We shall derandomize this algorithm as follows.
+
+    Let's draw a binary tree. The number of levels = number of variables, and both children correspond to assigning T/F to the variable. There are potentially an exponential number of
+    nodes in this binary tree (in particular, $2^n$ leaves). The leaves correspond to unique assignments, each of which has some number of clauses that are satisfied, so write that on the
+    corresponding leaf.\nl
+    Average of numbers on the leaves is in fact $\frac{7}{8}m$ (by the expectation result earlier). For a variable, one of the two assignments to that variable has average of leaves $\ge \frac{7}{8}m$
+    (corresponds to one of the two subtrees).\nl
+    This average value can be computed by adding the variable to the expectation and finding the corresponding conditional expectation of the number of satisfied clauses. That is, we get the following algorithm:
+    \begin{enumerate}
+        \item At the first step, we look at all assignments where $x_1 = T$ and compute the average number of clauses satisfied in these.
+        \item Do the same computation for $x_1 = F$.
+        \item At least one of
+            these has $\ge \frac{7}{8}m$ clauses on average, and set $x_1$ to the value corresponding to that one.
+        \item Then do this for the remaining variables as well.
+    \end{enumerate}
+    So we go to the direction which always has a $\ge$ number of satisfied clauses, and we get at least $\frac{7}{8}m$ clauses that are satisfied.\nl
+    Since the maximum number of clauses that can be satisfied is $m$, so $OPT \le m$, so the number of clauses satisfied by our algorithm is $\ge \frac{7}{8} \ge \frac{7}{8}OPT$, whence
+    we get that this algorithm is a $\frac{7}{8}$-approximation.
+\end{proof}
+
+\begin{note}
+    This is called the \emph{method of conditional expectations}, and we choose an assignment which has a higher conditional expectation.
+\end{note}
+
+\end{document}

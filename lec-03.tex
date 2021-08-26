@@ -1,0 +1,230 @@
+\documentclass[a4paper]{article}
+\usepackage[english]{babel}
+\usepackage[a4paper,top=2cm,bottom=2cm,left=2cm,right=2cm,marginparwidth=1.75cm]{geometry}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+% \usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{import}
+\usepackage{pdfpages}
+\usepackage{transparent}
+\usepackage{xcolor}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+
+\usepackage{thmtools}
+\usepackage{enumitem}
+\usepackage[framemethod=TikZ]{mdframed}
+
+\usepackage{xpatch}
+
+\usepackage{boites}
+\makeatletter
+\xpatchcmd{\endmdframed}
+{\aftergroup\endmdf@trivlist\color@endgroup}
+{\endmdf@trivlist\color@endgroup\@doendpe}
+{}{}
+\makeatother
+
+%\usepackage[poster]{tcolorbox}
+%\allowdisplaybreaks
+%\sloppy
+
+\usepackage[many]{tcolorbox}
+
+\xpatchcmd{\proof}{\itshape}{\bfseries\itshape}{}{}
+
+% to set box separation
+\setlength{\fboxsep}{0.8em}
+\def\breakboxskip{7pt}
+\def\breakboxparindent{0em}
+
+\newenvironment{proof}{\begin{breakbox}\textit{Proof.}}{\hfill$\square$\end{breakbox}}
+\newenvironment{ans}{\begin{breakbox}\textit{Answer.}}{\end{breakbox}}
+\newenvironment{soln}{\begin{breakbox}\textit{Solution.}}{\end{breakbox}}
+
+% \tcolorboxenvironment{proof}{
+%     blanker,
+%     before skip=\topsep,
+%     after skip=\topsep,
+%     borderline={0.4pt}{0.4pt}{black},
+%     breakable,
+%     left=12pt,
+%     right=12pt,
+%     top=12pt,
+%     bottom=12pt,
+% }
+%
+% \tcolorboxenvironment{ans}{
+%     blanker,
+%     before skip=\topsep,
+%     after skip=\topsep,
+%     borderline={0.4pt}{0.4pt}{black},
+%     breakable,
+%     left=12pt,
+%     right=12pt,
+% }
+
+\mdfdefinestyle{enclosed}{
+    linecolor=black
+    ,backgroundcolor=none
+    ,apptotikzsetting={\tikzset{mdfbackground/.append style={fill=gray!100,fill opacity=.3}}}
+    ,frametitlefont=\sffamily\bfseries\color{black}
+    ,splittopskip=.5cm
+    ,frametitlebelowskip=.0cm
+    ,topline=true
+    ,bottomline=true
+    ,rightline=true
+    ,leftline=true
+    ,leftmargin=0.01cm
+    ,linewidth=0.02cm
+    ,skipabove=0.01cm
+    ,innerbottommargin=0.1cm
+    ,skipbelow=0.1cm
+}
+
+\mdfsetup{%
+    middlelinecolor=black,
+    middlelinewidth=1pt,
+roundcorner=4pt}
+
+\setlength{\parindent}{0pt}
+
+\mdtheorem[style=enclosed]{theorem}{Theorem}
+\mdtheorem[style=enclosed]{lemma}{Lemma}[theorem]
+\mdtheorem[style=enclosed]{claim}{Claim}[theorem]
+\mdtheorem[style=enclosed]{ques}{Question}
+\mdtheorem[style=enclosed]{defn}{Definition}
+\mdtheorem[style=enclosed]{notn}{Notation}
+\mdtheorem[style=enclosed]{obs}{Observation}
+\mdtheorem[style=enclosed]{eg}{Example}
+\mdtheorem[style=enclosed]{cor}{Corollary}
+\mdtheorem[style=enclosed]{note}{Note}
+
+% \let\thetheorem=\relax
+% \let\thelemma=\relax
+% \let\theclaim=\relax
+% \let\theques=\relax
+% \let\thedefn=\relax
+% \let\thenotn=\relax
+% \let\theobs=\relax
+% \let\thecor=\relax
+% \let\thenote=\relax
+
+% \renewcommand\qedsymbol{$\blacksquare$}
+\newcommand{\nl}{\vspace{0.2cm}\\}
+\newcommand{\ol}{\overline}
+\newcommand{\mc}{\mathcal}
+\newcommand{\mi}{\mathit}
+\newcommand{\mf}{\mathbf}
+\newcommand{\mb}{\mathbb}
+\newcommand{\OPT}{\mathbf{OPT}}
+\renewcommand{\L}{\mc{L}}
+\newcommand{\changesto}{\vdash}
+\newcommand\Vtextvisiblespace[1][.3em]{%
+    \mbox{\kern.06em\vrule height.3ex}%
+    \vbox{\hrule width#1}%
+    \hbox{\vrule height.3ex}
+}
+\newcommand{\blank}{{\Vtextvisiblespace[0.7em]}}
+\newcommand{\leftend}{\triangleright}
+\newcommand{\comp}{\overline}
+
+\newcommand{\incfig}[1]{%
+    \def\svgwidth{\columnwidth}
+    \import{./figures/}{#1.pdf_tex}
+}
+\pdfsuppresswarningpagegroup=1
+
+\title{\textbf{Approximation Algorithms Lecture 3}}
+\date{}
+
+%\section{Recap}
+%
+%\section{Definitions}
+%
+%\begin{defn}
+%\end{defn}
+%
+%\section{Content}
+%
+%\begin{theorem}
+%\end{theorem}
+%\begin{proof}
+%\end{proof}
+%
+%\begin{ques}
+%\end{ques}
+%
+%\begin{eg}
+%\end{eg}
+%
+%\begin{claim}
+%\end{claim}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\section{Recap}
+
+\section{Content}
+
+\begin{defn}
+    \textbf{SET-COVER}: Given a universe $U = \{e_i\}_{i=1}^n$, and sets $S_1, S_2, \cdots, S_n$ called the set system, where $S_i \subseteq U$ (and each element is in at least one $S_i$). Find a
+    minimum collection of sets which cover all elements, i.e., the union of all such sets is $U$.
+\end{defn}
+
+This is a NP-hard problem. So we look for an approximation algorithm (more specifically, a greedy algorithm) as follows:
+
+\begin{enumerate}
+    \item Pick the set which covers the most elements in $U$.
+    \item Remove covered elements from $U$.
+    \item Repeat until $U$ is empty.
+\end{enumerate}
+
+Another way of saying the same thing: we pick the set which cover the most number of uncovered elements.\nl
+An example where this doesn't give us the optimum solution:\nl
+Let $U = \{i\}_{i = 1}^{16}$, and sets $\{1, 2, 3, 4, 5, 6, 7\}$, $\{9, 10, 11, 12, 13, 14, 15\}$, $\{1, 2, 3, 4, 9, 10, 11, 12\}$, $\{5, 6, 13, 14\}$, $\{7, 15\}$, $\{8, 16\}$. (Example done in
+class had $8, 16$ in the first two sets as well, respectively)\nl
+
+\textbf{Analyzing the greedy algorithm}\nl
+We will associate a value in $[0, 1]$ with each elemebt ($v_i$ is the value of element $e_i$) such that the sum of values of elements in any set is at most $1$.\nl
+
+\begin{claim}
+    The sum of the values in any feasible assignment is at most the value of the optimum solution. Equivalently, the sum of values on elements is a lower bound on the value of the optimum solution.
+\end{claim}
+
+\begin{proof}
+    Consider the optimum solution. Then the sum of values in each set is $\le 1$. The sum of elements is upper bounded by the sum of ``values" of each set, which is at most the number of sets,
+    whence we are done.
+\end{proof}
+
+Note that we did this since while analyzing approximation algorithms, we need to compare our solution and the optimum solution. Finding the optimum value in itself is NP-hard in most cases.
+So for a minimization problem, we compare with a lower bound on $\OPT$. Ideally we want a good lower bound so that our bounding gives us a good bound on the competitive ratio.\nl
+So we need an assignment that tries to maximize the sum of elements. So we try to assign the values to help in the analysis (not a part of the algorithm).\nl
+
+\begin{enumerate}
+    \item If at step $i$, we pick a set which covers $u_i$ uncovered elements, assign each of these elements a value of $\frac{1}{u_i}$. This is infeasible, but we will fix this later.
+\end{enumerate}
+
+From here, we get to know that the sum of values of all elements equals the number of sets picked by the greedy algorithm.\nl
+
+\begin{ques}
+How infeasible is this assignment? Note that the property should hold for all sets, not just this set.
+\end{ques}
+
+Say $S = \{e_1, e_2, \ldots, e_k\}$ is some set. Suppose the elements of $S$ are covered by the greedy algorithm in the order $e_1, e_2, \ldots, e_k$ (else rename the elements).\nl
+Suppose $e_1$ was picked. Then the value of $e_1$ is at most $\frac{1}{k}$, since if it was more, we could have picked $S$ at that step rather than the one picked by the greedy algorithm. Then
+suppose $e_2, e_3$ were picked, in that case the value of each is at most $\frac{1}{k-1}$. Doing this, we get that the value of $e_i$ is at most $\frac{1}{k - i + 1}$. So the sum of values of
+elements in $S$ is at most $\sum_{i=1}^k\frac{1}{i} \le 1 + \ln k$.\nl
+So we can scale down all values by $1 + \ln k$ to get a feasible assignment (actually scale by the maximum size of any set of $S$).\nl
+Hence $n_i = \frac{v_i}{1 + \ln k}$ is a feasible assignment.\nl
+$\sum_{i = 1}^m n_i = \frac{\text{number of sets picked by the greedy algorithm}}{1 + \ln k} \le \OPT$.\nl
+
+To show that we can't get a better factor using the greedy algorithm, we can construct an example similar to the original example to obtain an instance where $\OPT = 2$ and greedy solution gives us $\log_2 n$ sets.
+
+\end{document}
