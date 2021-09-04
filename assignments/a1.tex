@@ -247,7 +247,6 @@ vertex cover of the DFS tree, and hence at most twice the size of a vertex cover
             \State \Return $A$
         \EndFunction
     \end{algorithmic}
-    \nl
     Consider the sets $L_i$ and $P_i$. We can partition the set of vertices of $T$ as $\cup_{i=1}^m (L_i \cup P_i)$ where $m$ is the number of steps taken by the while loop.
     The corresponding minimum set cover is $\cup_{i=1}^m P_i$.
     The non-leaf vertices of this tree are $S = \cup_{i=1}^m (P_i \cup L_{i+1})$, where $L_{m+1} = \emptyset$ for the sake of convenience. Note that all unions here are disjoint unions.\nl
@@ -264,5 +263,24 @@ vertex cover of the DFS tree, and hence at most twice the size of a vertex cover
     \end{align*}
     Rearranging this gives $|S| \le 2 \cdot \OPT$, as needed.
 \end{proof}
+
+\newpage
+
+\section{Problem 3}
+\subsection{Statement}
+In the \emph{maximum coverage problem}, we have a set of elements $E$, and $m$ subsets of elements $S_1, \ldots, S_m \subseteq E$. The goal is to choose $k$ sets such that we maximize the number of
+elements that are covered; an element $s$ is covered if it belongs to one of the sets picked. Give a $\left(1-\frac{1}{e}\right)$-approximation algorithm for this problem.
+\subsection{Solution}
+TODO
+
+\newpage
+
+\section{Problem 4}
+\subsection{Statement}
+In the \emph{related machines scheduling problem}, we are given $m$ machines and $n$ jobs. Job $j$ has processing time $p_j$ and machine $i$ has speed $s_i$.  Machine $i$ takes $p_j/s_i$ time to
+complete job $j$. Given $T$ design a polynomial time algorithm which either schedules jobs on the $m$ machines such that they finish by time $2T$ or proves that there is no way of scheduling jobs so
+that they all finish by time $T$.
+\subsection{Solution}
+TODO
 
 \end{document}
