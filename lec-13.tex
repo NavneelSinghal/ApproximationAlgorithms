@@ -199,11 +199,36 @@ Our algorithm then becomes:
 \end{enumerate}
 Note that solution is $\le$ LP value + $k$ (since rounding will increase by at most $k$), which is at most $\OPT + k$.\nl
 Note that $k$ is large, and we want to reduce it.\nl
-We will group objects to reduce number of distinct sizes, and order objects by decreasing size and form groups of $g$ objects.\nl
+We will group objects to reduce number of distinct sizes as follows: remove all objects of size $\le \eps$, order objects by decreasing size and form groups of $g$ objects.\nl
+Redefine $k$ as the number of distinct sizes now. (Verify this later on).
 Round up each object in a group to the size of the largest object in that group.\nl
 Let $I'$ be this new instance.\nl
 If we run the earlier algorithm on $I'$ then we get a solution with number of bins $\le \OPT' + \lceil\frac{k}{g}\rceil$.\nl
 In going from $I$ to $I'$ we only increased the object sizes, hence the solution for $I'$ can also pack the objects in $I$.\nl
 How does $\OPT'$ relate to $\OPT$?\nl
+\begin{claim}
+    $\OPT' \le \OPT + g$
+\end{claim}
+\begin{proof}
+    Consider a solution which requires $\OPT$ bins to pack objects of $I$.\nl
+    The objects of $I'$, except those of $g_1$ can be packed in the spaces occupied by the objects of $I$. To see this, we can just construct a mapping from $g_i$ to $g_{i-1}$, and put object $f(o)$
+    where $o$ is put in $I$.\nl
+    Now each group 1 object can be packed in a separate bin, so we are done.
+\end{proof}
+So all objects can be packed in $\OPT' + g + \lceil \frac{k}{g} \rceil$ bins.\nl
+Here $k$ is the number of distinct sizes obtained after throwing away all objects of size $\le \eps$.
+We will choose $g = \lceil \eps^2 k \rceil$, i.e., $g \le \eps^2 k + 1$.\nl
+So the solution we get is $\le \OPT + \eps^2 k + 1 + \lceil\frac{1}{\eps^2}\rceil \le \OPT + \eps^2 k + \frac{1}{\eps^2} + 2$.\nl
+We have $\eps \le \frac{\OPT}{k}$ since we have at least $k$ objects of size $\eps$, so the total volume is $\ge \eps k$, whence the total number of bins is at least $\lceil \eps k \rceil$. Then this gets us an upper bound of
+$\left(1 + \frac{1}{\eps}\right)\OPT + \frac{1}{\eps^2} + 2$.\nl
+How to handle small objects of size $|le \eps$?\nl
+\begin{enumerate}
+    \item Consider small objects in any order.
+    \item For each object, check if it can fit into one of the bins. If not, open a new bin.
+\end{enumerate}
+Note that if I open a new bin, then each bin has objects of size at least $1 - \eps$. Suppose we had $r$ bins opened earlier, then the total size of objects is at least $(1 - \eps)r$, which
+means that $\OPT \ge (1 - \eps) r$.\nl
+This means that $r \le \frac{\OPT}{1 - \eps}$.\nl
+So number of bins in my solution is $r + 1 \le \frac{\OPT}{1 - \eps} + 1 \le \OPT(1 + \eps) + 1$. (fix this later on using $\OPT'$).\nl
 
 \end{document}
