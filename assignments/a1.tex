@@ -152,12 +152,101 @@ roundcorner=4pt}
 \maketitle
 \tableofcontents
 
+\newpage
+
 \section{Problem 1}
 \subsection{Statement}
 Give a greedy algorithm that achieves an approximation guarantee of $O(\log n)$ for set multicover, which is a generalization of set cover in which an integral coverage requirement is also specified
 for each element and sets can be picked multiple number of times to satisfy all coverage requirements. Assume that the cost of picking $\alpha$ copies of set $S_i$ is $\alpha \cdot cost(S_i)$.
 \subsection{Solution}
-TODO
+Suppose the set $U = \{e_1, \ldots, e_n\}$ is the set of all elements, and $\mathcal{S} = \{S_1, \ldots, S_n\}$ is a collection of sets corresponding to this instance of the problem. Let the
+coverage requirement for $e_i$ be $req_i$.\nl
+For now, we will assume that the cost of each set is $1$.\nl
+Consider the following algorithm:
+\begin{algorithmic}[1]
+    \Function{ApproxSetMulticover}{$U = \{e_1, \ldots, e_n\}$, $\mathcal{S} = \{S_1, \ldots, S_m\}$, $req[1\ldots n]$}
+        \State Let $X \gets U$ \Comment The set of elements whose requirements haven't been met so far
+        \State Let $A$ be a multiset of subsets of $U$, initialized to $\emptyset$.
+        \State Let $f[1\ldots n]$ be an array initialized to all 0s
+        \Comment $f[i]$ will be the number of copies of $e_i$ covered so far
+        \While{$X$ is non-empty}
+            \State Let $S_i$ be a set that covers the most number of elements in $X$
+            \State Insert $S_i$ into $A$
+            \For{$e_j$ in $S_i$}
+                \State $f[j] \gets f[j] + 1$
+                \If{$f[j] = req[j]$}
+                    \State Remove $e_j$ from $X$.
+                \EndIf
+            \EndFor
+        \EndWhile
+        \State \Return $A$
+    \EndFunction
+\end{algorithmic}
+Note that this terminates since each element is in some $S_i$.\nl
+Now we claim that this algorithm achieves an approximation guarantee of $O(\log n)$.\nl
+As in the case of set cover, we shall assign some value $v_i$ to element $e_i$, such that we have $val(S) := \sum_{e_i \in S} v_i \le 1$ for all $S \in \mathcal{S}$.\nl
+Define $\OPT$ as the multiset (hence it can have duplicate elements) that achieves the minimum cost. Let $A$ be the multiset that we get from this algorithm.\nl
+\begin{claim}
+    $|\OPT| \ge \sum_{e_i \in U} req_i v_i$ for any feasible assignment of $v_i$'s.
+\end{claim}
+\begin{proof}
+    Note that we have the following (note that the sum is taken over all copies too):
+    \begin{align*}
+        |\OPT| &= \sum_{S \in \OPT} 1\\
+               &\ge \sum_{S \in \OPT} val(S)\\
+               &= \sum_{S \in \OPT} \sum_{e_i \in S} v_i\\
+               &= \sum_{e_i \in U} \sum_{S\in \OPT \land e_i \in S} v_i\\
+               &\ge \sum_{e_i \in U} req_i v_i
+    \end{align*}
+    Where the last inequality comes from the fact that $\OPT$ satisfies all coverage requirements.
+\end{proof}
+Now consider the following assignment of the $v_i$'s. At iteration $j$, suppose the $k^\mathrm{th}$ set was picked, and there were $c$ uncovered elements. Then we add $\frac{1}{c}$ to the
+cost of all uncovered elements in $S_k$.\nl
+At the end of the algorithm, replace $v_i$ by $\frac{v_i}{req_i \cdot (1 + \log n)}$.\nl
+    For a set $S$ in $A$, let $X_S$ be the set of uncovered elements belonging to $S$ when $S$ was added into $A$. Note that each $S$ uniquely corresponds to some iteration of the loop, since $A$
+    is a multiset.\nl
+    To make it clearer, we can label each copy of $S$ with the iteration number, but we choose not to do it to make the proof lighter on notation.\nl
+\begin{claim}
+    This is a feasible assignment of $v_i$'s, i.e., this assignment satisfies the inequality $val(S) \le 1$ for each $S \in \mathcal{S}$.
+\end{claim}
+\begin{proof}
+    Consider any set $S = \{e_1, \ldots, e_k\} \in \mathcal{S}$, and let the order in which the elements are completely covered by a set in the algorithm be $e_1, \ldots, e_k$ (reorder the $e_i$'s
+    if needed, in case any of these conditions are not satisfied).\nl
+    Firstly note that the number of uncovered elements that are present in a set chosen by the algorithm is always non-decreasing (else, we could have chosen the set with a larger number of
+    uncovered elements earlier to get a contradiction). Suppose $S_r$ was the last set that contributed to $v_i$. Then $e_i$ had its requirement satisfied when $S_r$ was added to $A$, and any
+    set before $S_r$ that had $e_i$ as one of the uncovered elements contained in it would have at most as much contribution to $v_i$ as the contribution of $S_r$. Moreover, it must have at least
+    $k - i + 1$ uncovered elements, since otherwise we could have chosen $S$ at that time. So we have\nl
+    \begin{align*}
+        v_i &\le \frac{1}{req_i \cdot (1 + \log n)} \cdot \sum_{d = 1}^{req_i} \frac{1}{|X_{S_r}|}\\
+            &= \frac{1}{req_i \cdot (1 + \log n)} \cdot \frac{req_i}{|X_{S_r}|}\\
+            &\le \frac{1}{(1 + \log n) \cdot (k - i + 1)}
+    \end{align*}
+    Hence, using this inequality, we have
+    \begin{align*}
+        val(S) &= \sum_{i = 1}^k v_i\\
+               &\le \sum_{i = 1}^k \frac{1}{1 + \log n} \cdot \frac{1}{k - i + 1}\\
+               &\le \frac{1 + \log k}{1 + \log n}\\
+               &\le 1
+    \end{align*}
+    The second-last inequality comes from the standard bound on the harmonic sums, and the last inequality comes from the fact that $k \le n$.
+    This completes the proof of the claim.
+\end{proof}
+\begin{claim}
+    $|A| \le (1 + \log n) \cdot |\OPT|$
+\end{claim}
+\begin{proof}
+    Note that we have the following:
+    \begin{align*}
+        |\OPT| &\ge \sum_{e_i \in U} req_i \cdot v_i\\
+               &= \frac{1}{1 + \log n} \cdot \sum_{e_i \in U} \sum_{S \in A \land e_i \in X_S} \frac{1}{|X_S|}\\
+               &= \frac{1}{1 + \log n} \cdot \sum_{S \in A} \sum_{e_i \in X_S} \frac{1}{X_S}\\
+               &= \frac{1}{1 + \log n} \cdot \sum_{S \in A} 1\\
+               &= \frac{|A|}{1 + \log n}
+    \end{align*}
+    This completes the proof of the claim.
+\end{proof}
+Since $A$ satisfies the coverage requirements (since the termination condition is the set $X$ being empty, and we remove an element from a set upon its coverage requirements being satisfied), we are
+done.\nl
 
 \newpage
 
@@ -271,7 +360,26 @@ vertex cover of the DFS tree, and hence at most twice the size of a vertex cover
 In the \emph{maximum coverage problem}, we have a set of elements $E$, and $m$ subsets of elements $S_1, \ldots, S_m \subseteq E$. The goal is to choose $k$ sets such that we maximize the number of
 elements that are covered; an element $s$ is covered if it belongs to one of the sets picked. Give a $\left(1-\frac{1}{e}\right)$-approximation algorithm for this problem.
 \subsection{Solution}
-TODO
+
+Consider the following greedy algorithm.
+\begin{algorithmic}[1]
+    \Function{ApproxMaxCoverage}{$E = \{e_1, \ldots, e_n\}$, $\mathcal{S} = \{S_1, \ldots, S_m\}$, $k$}
+        \State Let $X \gets E$ \Comment The set of uncovered elements
+        \State Let $A$ be a set of subsets of $E$, initialized to $\emptyset$.
+        \For{$k$ steps}
+            \State Let $S_i$ be a set that covers the most number of elements in $X$
+            \State Insert $S_i$ into $A$
+            \For{$e_j$ in $S_i$}
+                \If{$e_j$ is in $X$}
+                    \State Remove $e_j$ from $X$.
+                \EndIf
+            \EndFor
+        \EndFor
+        \State \Return $A$
+    \EndFunction
+\end{algorithmic}
+
+We claim that this gives us an $\left(1 - \frac{1}{e}\right)$ approximation algorithm.
 
 \newpage
 
