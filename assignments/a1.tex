@@ -258,6 +258,7 @@ that $S$ is indeed a vertex cover for $G$ and $|S| \le 2 \cdot \OPT$.
 We shall use the abbreviation DFS-tree for depth-first-search tree in what follows.\nl
 Since the DFS tree is a rooted tree, we will use the definition of a leaf as a vertex which doesn't have any children in the DFS tree (since otherwise, the claim in the problem statement doesn't
 hold for graphs consisting of a single cycle, or a connected simple graph with 2 vertices).\nl
+We shall also use the term tree to refer to a rooted tree, unless mentioned otherwise.\nl
 \begin{claim}
     $S$ is a vertex cover for $G$.
 \end{claim}
@@ -302,7 +303,7 @@ vertex cover of the DFS tree, and hence at most twice the size of a vertex cover
     \end{proof}
     \begin{claim}
         Let $L(T)$ be the set of leaves of a non-empty tree $T$, and let $P(T)$ be the set of vertices adjacent to a leaf. Then $P(T) \cup VC(T \setminus (P(T) \cup
-        L(T))$ is a minimum vertex cover of $T$ (here $VC(\cdot)$ gives an arbitrary minimum vertex cover of a possibly empty tree (rooted or unrooted)).
+        L(T))$ is a minimum vertex cover of $T$ (here $VC(\cdot)$ gives an arbitrary minimum vertex cover of a tree (rooted or empty)).
     \end{claim}
     \begin{proof}
         From the previous claim, we know that there exists a vertex cover $VC(T)$ such that $P(T) \subseteq VC(T)$.\nl
@@ -378,8 +379,66 @@ Consider the following greedy algorithm.
         \State \Return $A$
     \EndFunction
 \end{algorithmic}
+\nl
+We claim that this gives us an $\left(1 - \frac{1}{e}\right)$ approximation algorithm.\nl
+Let $c_i$ be the number of newly covered elements at the $i^\mathrm{th}$ step of the algorithm, and define $\OPT$ as a possible set of elements that are finally covered by an optimal algorithm.
+We will try to lower bound $c_i$ in terms of $\OPT$ to get an estimate about the quality of our solution. \nl
 
-We claim that this gives us an $\left(1 - \frac{1}{e}\right)$ approximation algorithm.
+\begin{claim}
+    $$c_i \ge \frac{|\OPT| - \sum_{j = 1}^{i - 1} c_j}{k}$$
+\end{claim}
+
+\begin{proof}
+Consider the set of elements $T_i$ which are in $\OPT$ but haven't been covered the algorithm till the $(i - 1)^\mathrm{th}$ step. Since there are $k$ sets in the optimal solution, by the pigeonhole
+    principle, at least one set in the optimal solution covers at least $\frac{|T_i|}{k}$ elements in this set. Since the optimal solution is restricted to choosing sets only from the
+    sets $S_k$, we get that at least one of the sets $S_k$ covers at least $\frac{|T_i|}{k}$ elements. Since at each iteration, we choose the set which covers the largest number of
+uncovered elements, we have $c_i \ge \frac{|T_i|}{k}$.\nl
+Now note that $\OPT \setminus T_i$ is the set of elements of $\OPT$ which are covered by the algorithm as of yet, so $|\OPT| - |T_i| = |\OPT \setminus T_i| \le |\text{covered elements}| = \sum_{j =
+1}^{i - 1} c_j$, so we get
+\begin{align*}
+    c_i &\ge \frac{|\OPT| - (|\OPT| - |T_i|)}{k}\\
+        &\ge \frac{|\OPT| - \sum_{j = 1}^{i - 1} c_j}{k}
+\end{align*}
+as needed.
+\end{proof}
+
+\begin{claim}
+    $$\sum_{j = 1}^i c_j \ge |\OPT| \cdot \left(1 - \left(1 - \frac{1}{k}\right)^i\right)$$
+\end{claim}
+\begin{proof}
+    For $i = 1$, the claim is true due to the claim above (and noting that $c_0 = 0$).\nl
+    Now for $i > 1$, suppose the claim is true for $i - 1$.\nl
+    We then have
+    \begin{align*}
+        \sum_{j = 1}^i c_j &= c_i + \sum_{j = 1}^{i - 1} c_j\\
+                &\ge \frac{|\OPT| - \sum_{j = 1}^{i - 1} c_j}{k} + \sum_{j = 1}^{i - 1} c_j\\
+                &= \left(1 - \frac{1}{k}\right) \cdot \sum_{j = 1}^{i - 1} c_j + \frac{|\OPT|}{k}\\
+                &\ge |\OPT| \cdot \left(\frac{1}{k} + \left(1 - \frac{1}{k}\right)\cdot\left(1 - \left(1 - \frac{1}{k}\right)^{i - 1}\right) \right)\\
+                &= |\OPT| \cdot \left(1 - \left(1 - \frac{1}{k}\right)^i\right)
+    \end{align*}
+    which completes the proof.
+\end{proof}
+
+From the last claim, we can lower bound the total number of elements the algorithm chooses (i.e., $\sum_{i=1}^k c_i$) by $\left(1 - \left(1 - \frac{1}{k}\right)^k\right) \cdot |\OPT|$. All that
+remains to be shown is that $\frac{1}{e} \ge \left(1 - \frac{1}{k}\right)^k$, and we would be done. We prove this as follows.\nl
+
+\begin{claim}
+    For any natural number $k$, we have
+    $$ \frac{1}{e} \ge \left(1 - \frac{1}{k}\right)^k $$
+\end{claim}
+\begin{proof}
+    Let $f(k) = \left(1 - \frac{1}{k}\right)^k$. Then we have
+    \begin{align*}
+        \frac{f(k + 1)}{f(k)} &= \frac{\left(1 - \frac{1}{k + 1}\right)^{k+1}}{\left(1 - \frac{1}{k}\right)^k}\\
+                              &= \frac{k}{k + 1} \cdot \left(\frac{k^2}{k^2 - 1}\right)^k\\
+                              &= \frac{k}{k + 1} \cdot \left(1 + \frac{1}{k^2 - 1}\right)^k\\
+                              &\ge \frac{k}{k + 1} \cdot \left(1 + \frac{k}{k^2 - 1}\right)\\
+                              &> \frac{k}{k + 1} \cdot \left(1 + \frac{k}{k^2}\right)\\
+                              &= 1
+    \end{align*}
+    This shows that $f$ is an increasing function on the naturals.\nl
+    Hence $f(k) \le \lim_{k \to \infty} f(k) = \frac{1}{e}$, as needed.
+\end{proof}
 
 \newpage
 
