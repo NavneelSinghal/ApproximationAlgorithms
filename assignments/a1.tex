@@ -184,7 +184,8 @@ Consider the following algorithm:
 \end{algorithmic}
 Note that this terminates since each element is in some $S_i$.\nl
 Now we claim that this algorithm achieves an approximation guarantee of $O(\log n)$.\nl
-As in the case of set cover, we shall assign some value $v_i$ to element $e_i$, such that we have $val(S) := \sum_{e_i \in S} v_i \le 1$ for all $S \in \mathcal{S}$.\nl
+As in the case of set cover, we shall assign some value $v_i$ to element $e_i$, such that we have $val(S) := \sum_{e_i \in S} v_i \le 1$ for all $S \in \mathcal{S}$. We shall call an assignment
+that satisfies this condition a feasible assignment.\nl
 Define $\OPT$ as the multiset (hence it can have duplicate elements) that achieves the minimum cost. Let $A$ be the multiset that we get from this algorithm.\nl
 \begin{claim}
     $|\OPT| \ge \sum_{e_i \in U} req_i v_i$ for any feasible assignment of $v_i$'s.
@@ -200,21 +201,20 @@ Define $\OPT$ as the multiset (hence it can have duplicate elements) that achiev
     \end{align*}
     Where the last inequality comes from the fact that $\OPT$ satisfies all coverage requirements.
 \end{proof}
-Now consider the following assignment of the $v_i$'s. At iteration $j$, suppose the $k^\mathrm{th}$ set was picked, and there were $c$ uncovered elements. Then we add $\frac{1}{c}$ to the
-cost of all uncovered elements in $S_k$.\nl
-At the end of the algorithm, replace $v_i$ by $\frac{v_i}{req_i \cdot (1 + \log n)}$.\nl
-    For a set $S$ in $A$, let $X_S$ be the set of uncovered elements belonging to $S$ when $S$ was added into $A$. Note that each $S$ uniquely corresponds to some iteration of the loop, since $A$
+    For a set $S$ in $A$, let $X_S$ be the set of elements with unsatisfied coverage requirements belonging to $S$ when $S$ was added into $A$. Note that each $S$ uniquely corresponds to some iteration of the loop, since $A$
     is a multiset.\nl
+    Now consider the following assignment of the $v_i$'s. At iteration $j$, suppose the $k^\mathrm{th}$ set was picked. Then we add $\frac{1}{|X_{S_k}|}$ to the cost of all elements in $X_{S_k}$.\nl
+At the end of the algorithm, replace $v_i$ by $\frac{v_i}{req_i \cdot (1 + \log n)}$ for all $i$.\nl
     To make it clearer, we can label each copy of $S$ with the iteration number, but we choose not to do it to make the proof lighter on notation.\nl
 \begin{claim}
     This is a feasible assignment of $v_i$'s, i.e., this assignment satisfies the inequality $val(S) \le 1$ for each $S \in \mathcal{S}$.
 \end{claim}
 \begin{proof}
-    Consider any set $S = \{e_1, \ldots, e_k\} \in \mathcal{S}$, and let the order in which the elements are completely covered by a set in the algorithm be $e_1, \ldots, e_k$ (reorder the $e_i$'s
+    Consider any set $S = \{e_1, \ldots, e_k\} \in \mathcal{S}$, and wlog let the order in which the elements have their coverage requirement met in the algorithm be $e_1, \ldots, e_k$ (reorder the $e_i$'s
     if needed, in case any of these conditions are not satisfied).\nl
-    Firstly note that the number of uncovered elements that are present in a set chosen by the algorithm is always non-decreasing (else, we could have chosen the set with a larger number of
-    uncovered elements earlier to get a contradiction). Suppose $S_r$ was the last set that contributed to $v_i$. Then $e_i$ had its requirement satisfied when $S_r$ was added to $A$, and any
-    set before $S_r$ that had $e_i$ as one of the uncovered elements contained in it would have at most as much contribution to $v_i$ as the contribution of $S_r$. Moreover, it must have at least
+    Firstly note that the number of elements with unsatisfied coverage requirements that are present in a set chosen by the algorithm is always non-decreasing (else, we could have chosen the set with a larger number of
+    uncovered elements earlier to get a contradiction to the way we choose the set at an iteration). Suppose $S_r$ was the last set that contributed to $v_i$. Then $e_i$ had its requirement satisfied when $S_r$ was added to $A$, and any
+    set before $S_r$ that had $e_i$ as one of the unsatisfied elements contained in it would have at most as much contribution to $v_i$ as the contribution of $S_r$. Moreover, it must have at least
     $k - i + 1$ uncovered elements, since otherwise we could have chosen $S$ at that time. So we have\nl
     \begin{align*}
         v_i &\le \frac{1}{req_i \cdot (1 + \log n)} \cdot \sum_{d = 1}^{req_i} \frac{1}{|X_{S_r}|}\\
@@ -255,6 +255,8 @@ done.\nl
 Consider the following 2-approximation algorithm for the vertex cover problem. Find a depth first search tree in the given graph, $G$, and output the set, $S$, of non-leaf vertices of this tree. Show
 that $S$ is indeed a vertex cover for $G$ and $|S| \le 2 \cdot \OPT$.
 \subsection{Solution}
+Firstly, note that if $G$ is not connected, we can note that a minimum vertex cover is the union of minimum vertex covers of each component, so it suffices to show the conclusion for a
+connected graph.\nl
 We shall use the abbreviation DFS-tree for depth-first-search tree in what follows.\nl
 Since the DFS tree is a rooted tree, we will use the definition of a leaf as a vertex which doesn't have any children in the DFS tree (since otherwise, the claim in the problem statement doesn't
 hold for graphs consisting of a single cycle, or a connected simple graph with 2 vertices).\nl
@@ -379,7 +381,6 @@ Consider the following greedy algorithm.
         \State \Return $A$
     \EndFunction
 \end{algorithmic}
-\nl
 We claim that this gives us an $\left(1 - \frac{1}{e}\right)$ approximation algorithm.\nl
 Let $c_i$ be the number of newly covered elements at the $i^\mathrm{th}$ step of the algorithm, and define $\OPT$ as a possible set of elements that are finally covered by an optimal algorithm.
 We will try to lower bound $c_i$ in terms of $\OPT$ to get an estimate about the quality of our solution. \nl
@@ -448,6 +449,95 @@ In the \emph{related machines scheduling problem}, we are given $m$ machines and
 complete job $j$. Given $T$ design a polynomial time algorithm which either schedules jobs on the $m$ machines such that they finish by time $2T$ or proves that there is no way of scheduling jobs so
 that they all finish by time $T$.
 \subsection{Solution}
-TODO
+Without loss of generality, we assume that $s_1 \le s_2 \le \ldots \le s_m$ (else we can always reorder the machines), and we also assume that the jobs are processed by the following algorithm in the order $1, \ldots, n$ (else we can always reorder the job ids).
+Consider the following algorithm:
+\begin{algorithmic}[1]
+    \Function{ApproxRelatedMachineScheduling}{$p[1\ldots n]$, $s[1\ldots m]$, $T$}
+        \State Let $t[1 \ldots m]$ be an array initialized to all zeroes.
+        \Comment{$t[i]$ will store the total time taken by all the jobs assigned to machine $i$ so far.}
+        \State Let $jobs[1 \ldots m]$ be an array of empty lists
+        \Comment{$jobs[i]$ will store the jobs assigned to machine $i$ so far.}
+        \For{each job $j$}
+            \State Let machine $i$ be the machine with the smallest $i$ (and hence also the least speed) such that $t[i] + p_j / s_i$ is at most $2T$.
+            \If{no such machine exists}
+                \State \Return failure
+            \EndIf
+            \State Add $j$ to $jobs[i]$
+            \State $t[i] \gets t[i] + p[j] / s[i]$
+        \EndFor
+        \State \Return $jobs$
+    \EndFunction
+\end{algorithmic}
+Note that if the algorithm doesn't fail, by the condition that says that we assign any job to a machine whose total execution time won't exceed $2T$, we have that the scheduling that is
+returned by the algorithm always satisfies the condition that all jobs are finished by time $2T$.\nl
+Hence, all there is to show is that if the algorithm fails, there is no way of scheduling jobs so that they all finish by time $T$. Taking the contrapositive, we need to show that if there is
+a way to schedule all jobs on the machines with execution time $\le T$, then the algorithm doesn't fail.\nl
+Suppose, for the sake of contradiction, that there exists an instance of the problem where our algorithm fails, and there is a way to schedule jobs in a way that every machines finishes
+execution in time $\le T$.\nl
+Let $\OPT$ be the time taken for the optimal scheduling. Then we have $\OPT \le T$, since otherwise that would contradict the definition of $\OPT$.\nl
+Suppose the first job that wasn't processed was job $k$, where $1 \le k \le n$.\nl
+Consider the state of the jobs before we tried to schedule job $k$. Let $S_i^{OPT}$ be the set of jobs assigned to machine $i$ in an optimal solution, and let $S_i^{ALG}$ be the set of jobs assigned
+to machine $i$ in our algorithm (just before the failure).\nl
+We call a machine \emph{bad} if the total time taken by jobs assigned to it by the algorithm is more than $T$, and \emph{good} otherwise.\nl
+\begin{claim}
+    There is at least one \emph{good} machine.
+\end{claim}
+\begin{proof}
+    Suppose all machines are bad. Then for each machine $i$, we have:
+
+    \begin{align*}
+        \sum_{j \in S_i^{ALG}} \frac{p_j}{s_i} &> T\\
+                                    &\ge \OPT\\
+                                    &\ge \sum_{j \in S_i^{OPT}} \frac{p_j}{s_i}
+    \end{align*}
+
+    This reduces to
+    $$
+    \sum_{j \in S_i^{ALG}} p_j > \sum_{j \in S_i^{OPT}} p_j
+    $$
+
+    Summing this over all machines, and noting that we have only assigned jobs $1$ through $k - 1$ to the machines in the algorithm, and jobs $1$ to $n$ to the machines in the optimal solution,
+    we have
+    $$
+    \sum_{j = 1}^{k - 1} p_j > \sum_{j = 1}^{n} p_j
+    $$
+    This is a contradiction, as for all $j$, we have $p_j \ge 0$, and $k - 1 \le n - 1 < n$.
+\end{proof}
+Let $i$ be the largest index such that machine $i$ is good, i.e., $i$ is the index of the fastest good machine.\nl
+\begin{claim}
+    There exists a job that has been assigned to a machine with index $> i$ by our algorithm, but is assigned to a job with index $\le i$ in an optimal solution.
+\end{claim}
+\begin{proof}
+    Suppose that this is not the case. Then any job that has been assigned to a machine with index $> i$ by our algorithm is also assigned to a job with index $> i$ in any optimal solution. Let
+    the set of jobs assigned to the machines with indices $> i$ by our algorithm be $S^{ALG}$, and let the set of jobs assigned to the machines with indices $> i$ in an optimal solution be
+    $S^{OPT}$. Then we have $S^{ALG} \subseteq S^{OPT}$.\nl
+    Since all machines with index $> i$ are bad, for all machines with index $i' > i$, we have the following inequality from the previous proof:
+    $$
+    \sum_{j \in S_{i'}^{ALG}} p_j > \sum_{j \in S_{i'}^{OPT}} p_j
+    $$
+    Summing this over all $i' > i$, we have
+
+    $$
+    \sum_{j \in S^{ALG}} p_j > \sum_{j \in S^{OPT}} p_j
+    $$
+    This is a contradiction, since $S^{ALG} \subseteq S^{OPT}$.
+\end{proof}
+Consider any such job $j$ that is guaranteed to exist by the previous claim.\nl
+\begin{claim}
+    Job $j$ could have been added to machine $i$ when it was being assigned a machine, without the violation of any constraints imposed by the algorithm.
+\end{claim}
+\begin{proof}
+    Note that since machine $i$ is good, the total time taken by jobs assigned to it at the end of the algorithm is $\le T$. Since at each step, we can never remove a job from the set of jobs assigned
+    to a machine, the total time taken by the jobs assigned to machine $i$ when job $j$ was being assigned a machine would have also been $\le T$.\nl
+    Since an optimal solution assigns job $j$ to a machine $i'$ with $i' \le i$, we must have $\frac{p_j}{s_i} \le \frac{p_j}{s_{i'}} \le \OPT \le T$, since $i'$ can have speed at most that of
+    $i$.\nl
+    So, had we assigned job $j$ to machine $i$ at that point, the total time taken by machine $i$ would have been at most $T + T = 2T$, which doesn't violate the constraints.
+\end{proof}
+
+Using this claim, we shall argue our way to a contradiction. Note that at that iteration when we were assigning a machine to job $j$, we could have assigned it to machine $i$, however, by
+the assumption on job $j$ (by the previous claim), we assigned it to a machine with a higher index, which is a contradiction.\nl
+
+This contradiction shows that our assumption about the existence of an instance of the problem where the algorithm fails to return a schedule but there is a schedule where all the machines are free
+by time $T$, was wrong, which completes the proof.
 
 \end{document}
