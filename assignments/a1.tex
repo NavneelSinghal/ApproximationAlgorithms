@@ -162,7 +162,7 @@ for each element and sets can be picked multiple number of times to satisfy all 
 Suppose the set $U = \{e_1, \ldots, e_n\}$ is the set of all elements, and $\mathcal{S} = \{S_1, \ldots, S_n\}$ is a collection of sets corresponding to this instance of the problem. Let the
 coverage requirement for $e_i$ be $req_i$.\nl
 For now, we will assume that the cost of each set is $1$.\nl
-Consider the following algorithm:
+Consider the following (non-polynomial-time) algorithm (at the end of the proof, we will give a polynomial-time algorithm that is equivalent to this algorithm):
 \begin{algorithmic}[1]
     \Function{ApproxSetMulticover}{$U = \{e_1, \ldots, e_n\}$, $\mathcal{S} = \{S_1, \ldots, S_m\}$, $req[1\ldots n]$}
         \State Let $X \gets U$ \Comment The set of elements whose requirements haven't been met so far
@@ -248,6 +248,53 @@ At the end of the algorithm, replace $v_i$ by $\frac{v_i}{req_i \cdot (1 + \log 
 Since $A$ satisfies the coverage requirements (since the termination condition is the set $X$ being empty, and we remove an element from a set upon its coverage requirements being satisfied), we are
 done.\nl
 
+Now it only remains to show an algorithm that is equivalent to the above algorithm, but which runs in polynomial time.
+\begin{algorithmic}[1]
+    \Function{EfficientApproxSetMulticover}{$U = \{e_1, \ldots, e_n\}$, $\mathcal{S} = \{S_1, \ldots, S_m\}$, $req[1\ldots n]$}
+        \State Let $X \gets U$ \Comment The set of elements whose requirements haven't been met so far
+        \State Let $count[1\ldots m]$ be an array initialized to all $0$s
+        \Comment $count[i]$ will be the number of copies of $S_i$ picked so far.
+        \State Let $f[1\ldots n]$ be an array initialized to all 0s
+        \Comment $f[i]$ will be the number of copies of $e_i$ covered so far
+        \While{$X$ is non-empty}
+            \State Let $S_i$ be a set that covers the most number of elements in $X$
+            \State Let $e_r$ be an unsatisfied element in $S_i$ with the least number of copies needed to satisfy the requirement goal.
+            \State Let $h = req[r] - f[r]$
+            \State $count[i] \gets count[i] + h$
+            \For{$e_j$ in $S_i$}
+                \State $f[j] \gets f[j] + h$
+                \If{$f[j] = req[j]$}
+                    \State Remove $e_j$ from $X$.
+                \EndIf
+            \EndFor
+        \EndWhile
+        \State \Return $count$
+    \EndFunction
+\end{algorithmic}
+
+\begin{claim}
+    This is equivalent to the previous algorithm.
+\end{claim}
+\begin{proof}
+    Note that there is a possible run of the previous algorithm which picks the same set until one of the unsatisfied elements of $S$ is fully satisfied, since we didn't restrict the choice of $S_i$. So,
+    if $e_r$ is an element with the least number of copies needed to satisfy its requirement, we can repeat the same set $S$ for as many times as required for it to reach the goal, which is
+    $req[r] - f[r]$. Note that doing this doesn't make the $f$-value of any uncovered element jump over its $req$-value, else that would have been an element with a strictly less number of copies
+    needed to satisfy its requirement, and would have been chosen instead of $e_r$. Hence, we can always simulate the next $h = req[r] - f[r]$ steps of the algorithm in a single step, which is
+    what our algorithm does.
+\end{proof}
+
+\begin{claim}
+    This is a polynomial-time algorithm.
+\end{claim}
+\begin{proof}
+    Note that at any step, we remove at least one element from $X$, since $e_r$ is removed from $X$. Hence, the number of iterations is bounded above by $n$. In an iteration, we check for
+    the total number of elements in $X$, which is done in $O(1)$, then we look for a
+    set with the maximum number of elements in $X$, and that can be done in $O(nm)$ time, and iterate over all elements in $S_i$ to get the element with the least $freq - f$ value in time $O(n)$,
+    and then iterate over elements, update $f$, and potentially remove it from $X$, which is also $O(n)$ time (if we maintain $X$ as a boolean array, and the count of elements in $X$ as an
+    integer variable). So the overall time taken is $O(n^2m)$ (and if we take into account the word size, it'll be multiplied by the word size, which still is $O(n)$, and hence keeps the time
+    taken polynomial).
+\end{proof}
+
 \newpage
 
 \section{Problem 2}
@@ -261,6 +308,8 @@ We shall use the abbreviation DFS-tree for depth-first-search tree in what follo
 Since the DFS tree is a rooted tree, we will use the definition of a leaf as a vertex which doesn't have any children in the DFS tree (since otherwise, the claim in the problem statement doesn't
 hold for graphs consisting of a single cycle, or a connected simple graph with 2 vertices).\nl
 We shall also use the term tree to refer to a rooted tree, unless mentioned otherwise.\nl
+Note that this algorithm is indeed a polynomial time algorithm, since DFS is linear in the input size, and storing the children of each vertex in a list associated to that vertex is linear in the
+input size as well, and we can check for a vertex being a leaf by checking whether this list is empty or not, and add the non-leaves to the answer in linear time as well.\nl
 \begin{claim}
     $S$ is a vertex cover for $G$.
 \end{claim}
@@ -371,6 +420,9 @@ Consider the following greedy algorithm.
         \State Let $A$ be a set of subsets of $E$, initialized to $\emptyset$.
         \For{$k$ steps}
             \State Let $S_i$ be a set that covers the most number of elements in $X$
+            \If{$X$ is empty}
+                \State break
+            \EndIf
             \State Insert $S_i$ into $A$
             \For{$e_j$ in $S_i$}
                 \If{$e_j$ is in $X$}
@@ -378,9 +430,16 @@ Consider the following greedy algorithm.
                 \EndIf
             \EndFor
         \EndFor
+        \If{the total number of sets in $A$ is less than $k$}
+            \State Keep adding an arbitrary set from $\mathcal{S}$ to $A$ till we have $k$ sets in $A$
+        \EndIf
         \State \Return $A$
     \EndFunction
 \end{algorithmic}
+Firstly, note that if we implement this algorithm with $A$ being an array where $A[i]$ is the number of copies of $S_i$ we have taken, then initialization of $A$ is $O(m)$, insertion of a set is
+$O(1)$, and the final check is $O(n)$ too (if we ignore the word size, but if we take it into account, we have to just multiply it by the word size, which can be at most equal to the size of the
+input, so dealing with $A$ is always a polynomial-time step). Also, the number of iterations is bounded above by $n$, since we remove at least one element from $X$ at each step. Since
+traversing a set is polynomial in the size of the input, the whole algorithm is also polynomial in the size of the input.\nl
 We claim that this gives us an $\left(1 - \frac{1}{e}\right)$ approximation algorithm.\nl
 Let $c_i$ be the number of newly covered elements at the $i^\mathrm{th}$ step of the algorithm, and define $\OPT$ as a possible set of elements that are finally covered by an optimal algorithm.
 We will try to lower bound $c_i$ in terms of $\OPT$ to get an estimate about the quality of our solution. \nl
@@ -468,6 +527,8 @@ Consider the following algorithm:
         \State \Return $jobs$
     \EndFunction
 \end{algorithmic}
+Firstly note that this algorithm is polynomial in the input size, since the number of iterations is upper bounded by $n$, and in each iteration, we look at each machine, which takes $O(m)$ time,
+and we add a job and update the $t$-value for some machine, which is $O(1)$. So the algorithm is overall polynomial-time in the size of the input.\nl
 Note that if the algorithm doesn't fail, by the condition that says that we assign any job to a machine whose total execution time won't exceed $2T$, we have that the scheduling that is
 returned by the algorithm always satisfies the condition that all jobs are finished by time $2T$.\nl
 Hence, all there is to show is that if the algorithm fails, there is no way of scheduling jobs so that they all finish by time $T$. Taking the contrapositive, we need to show that if there is
