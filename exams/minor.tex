@@ -177,7 +177,109 @@ roundcorner=4pt}
 \section{Problem 1}
 
 \subsection{Statement}
+
+Let $G = (V, E)$ be a complete undirected graph with edge costs satisfying triangle inequality and let $k$ be a positive integer. The problem is to partition $V$ into sets $V_1,\ldots, V_k$ so as to minimize the costliest edge between two vertices of the same set, i.e.
+$$
+\min \max_{1 \le i \le k} \max_{u,v \in V_i} cost(u, v)
+$$
+Give a factor 2 approximation algorithm for this problem together with a tight example.
+
 \subsection{Solution}
+
+As per a clarification, we have $cost(u, u) = 0$. By the triangle inequality, we have $cost(u, v) + cost(v, u) = cost(u, u) \ge 0$, and since edges are
+undirected, $cost(u, v) = cost(v, u) \ge 0$.\nl
+We assume that $k \le n$, since otherwise by the pigeonhole principle, at least one of the sets must be empty, and hence the costliest edge between two vertices of the same set won't be defined at
+all.\nl
+We consider the following greedy algorithm:
+
+\begin{algorithmic}[1]
+    \Function{ApproxPartition}{$G = (V, E)$, $cost : V \times V \to \R$}
+    \State Let $c[1 \ldots k]$ be an array initialized to all $0$s (except $c[1]$, which is $1$) \Comment{This stores the ``center" of the $i^{th}$ partition (not a center in the traditional sense)}
+        \State Let $partition[1 \ldots n]$ be an array initialized to all $1$s. \Comment{This stores the partition id of the $i^{th}$ vertex}
+        \State Let $vertices[1 \ldots k]$ be an array of linked lists (all but $vertices[1]$ are empty, with $vertices[1]$ initially having all the vertices).
+        \For{$i$ from $2$ to $k$}
+            \State $index \gets -1$
+            \State $distance \gets 0$
+            \For{$p$ from $1$ to $i - 1$}
+                \For{$v$ in $vertices[p]$}
+                    \If{$distance < cost(v, c[p])$}
+                        \State $index \gets v$
+                        \State $distance \gets cost(v, c[p])$
+                    \EndIf
+                \EndFor
+            \EndFor
+            \State Remove $index$ from $vertices[partition[index]]$
+            \State $partition[index] \gets i$
+            \State Insert $index$ into $vertices[partition[index]]$
+            \State $c[i] \gets index$
+            \For{$p$ from $1$ to $i - 1$}
+                \For{$v$ in $vertices[p]$}
+                    \If{$cost(v, c[p]) < cost(v, index)$}
+                        \State Remove $v$ from $vertices[p]$
+                        \State $partition[v] \gets i$
+                        \State Insert $v$ into $vertices[i]$
+                    \EndIf
+                \EndFor
+            \EndFor
+        \EndFor
+        \State \Return $vertices$
+    \EndFunction
+\end{algorithmic}
+
+The high level description of the algorithm is as follows. Initially the only partition consists of all vertices. Suppose we are at iteration $i$. Consider a vertex which is farthest from the ``center" (assigned by the algorithm, not the true center) of its partition. Remove it from this partition, and
+make a new partition which has this vertex as its assigned ``center", and stores only this vertex (for now). Then for each vertex which is closer to this vertex than the ``center" of its own
+partition, move it from its old partition to this partition. Then after $k - 1$ such iterations, we get a partition of $V$ into $k$ sets, and we return it.\nl
+
+\begin{claim}
+In the case when $n = k$, the answer returned by the algorithm is optimal.
+\end{claim}
+\begin{proof}
+    Since at any step of the algorithm, there exist two distinct vertices in the same partition by the pigeonhole principle, we never pick $c[p]$ for a partition $p$ at any point. Hence at each
+    step of the algorithm, we do two things:
+    \begin{enumerate}
+        \item Increase the number of partitions by 1.
+        \item Don't empty any partition.
+    \end{enumerate}
+    Since in the end, we have $k = n$ partitions in this case, and the cost is $0$, we are done (since no cost is negative).
+\end{proof}
+
+Now suppose $n > k$. Let $v$ be the vertex that would have been picked had we run the algorithm for another iteration (i.e., the vertex which our algorithm would have chosen as the ``center" for a
+new $(k + 1)^{th}$ partition).\nl
+Suppose this was in a partition $p$ earlier, whose center was $c[p] = x$. Note that since we move a vertex from a partition to another partition if and only if the distance to the
+``center" of its partition reduces, we can see that the distance from a vertex to the ``center" of its partition never increases as the algorithm progresses.\nl
+\begin{claim}
+    In the solution produced by the algorithm, the weight of the costliest edge between two vertices of the same set is at most $2 \cdot cost(v, x)$.
+\end{claim}
+\begin{proof}
+Now note that $v$ (due to the choice of $v$) has distance to $x$ as the largest distance from a vertex to a center. So, for any vertex $u$, we have the distance to its partition's center to be at most
+$cost(v, x)$. Using the triangle inequality on the triangle $u, u', c[partition[u]]$ for $u, u'$ in the same partition, we get the distance between them (i.e., $cost(u, u')$) bounded above by
+$cost(u, c[partition[u]]) + cost(u', c[partition[u']]) \le 2\cdot cost(v, x)$, and we are done.
+\end{proof}
+
+\begin{claim}
+    $\OPT \ge cost(v, x)$.
+\end{claim}
+\begin{proof}
+    Note that as we mentioned earlier, for each vertex $v$, $cost(v, c[partition[v]])$ never increases as the algorithm progresses. We claim the following:\nl
+    \begin{claim}
+        Suppose the center of the partition which had $c[i]$ before it was moved into partition $i$ was $a[i]$. Then $cost(c[j], c[l]) \ge a$ for all $1 \le j \ne l \le i$.
+    \end{claim}
+    \begin{proof}
+        We do an induction on $i$. For $i = 1$ and $i = 2$ (when $i = 2$ is valid) there is nothing to prove. Now suppose $i > 2$.
+        Note that whenever we move a vertex from a partition to a new partition, it is done only if the distance to the center of the new partition is smaller than the distance from its old
+        partition's center. Hence, we have $cost(c[i], c[j]) \ge a$ for all $1 \le j < i$. Now note that at each step, since $cost(v, c[partition[v]])$ never increases, the maximum of this quantity
+        over all $v$ doesn't increase either. This precisely gives us $a[i] \le a[i - 1]$. Using the inductive hypothesis, we are done.
+    \end{proof}
+    This shows that all $k + 1$ centers are at a distance of at least $cost(v, x)$ from each other. Since there are only $k$ sets in $\OPT$, two of them must be in the same partition by the
+    pigeonhole principle, so in that partition, the costliest edge must have weight at least $cost(v, x)$.
+\end{proof}
+Combining these two claims, we have $\ALG \le 2 \cdot \OPT$, and we are done.\nl
+For a tight example, consider the following:\nl
+Let $n = 4$ and $k = 2$, an array $a[1\ldots 4] = [2, 1, 3, 4]$, and (the metric) $cost(u, v) = |a[u] - a[v]|$. This satisfies the triangle inequality (since $|a - b| + |b - c| \ge |a - c|$ for all $a, b,
+c \in \R$), and the algorithm partitions it into $\{1, 2, 3\}$ and $\{4\}$, which gives $\ALG = 2$, but the optimal way is to split it as $\{1, 2\}$ and $\{3, 4\}$ with $\OPT = 1$.\nl
+To argue that even if we change the $<$ sign to the $\le$ sign anywhere, we can't get better than a $2-$approximation with this algorithm, we tweak the example slightly to $a[4] = 4 + \eps$ for some
+small $\eps$. Then the algorithm gives us the same partition again, with $\ALG = 2$, and the optimal partition is also the same, with $\OPT = 1 + \eps$. This can be made arbitrarily close to
+$2$, so we are done.
 
 \newpage
 
@@ -327,16 +429,14 @@ is the case when $s = t$, which is trivial. We will try to iteratively find bett
 Firstly note that we can change the order of computation of our dynamic program from row major to column major order, by noting that $(i, j)$ is computed strictly after $(i - 1, *)$, and it
 depends only on smaller $j$. By allocating memory only for the columns we need (this can be done by swapping rows and columns and the coordinates in our algorithm), we will get another algorithm
 which would run in $O((n + m) \cdot \OPT)$. Call this the \textbf{good} algorithm.\nl
-
 To reduce the upper bound, we will try to binary search on it (with the initial range being $[1, Cn]$, where $C$ is the max cost edge length).\nl
-
 For the binary search, we will use the following approximate predicate for a given $0 < r < 1$, given an upper bound $B$ to test:
 
 \begin{enumerate}
     \item Remove all edges with cost $> B$, and replace the cost of edge $e$ with $\lfloor cost \cdot n / (B r) \rfloor$
     \item For $c$ in $0$ to $\frac{n}{r}$:
         \begin{itemize}
-            \item Compute the $minLen$ values for cost = $c$ (this corresponds to a column) using the good algorithm.
+            \item Compute the $minLen$ values for cost = $c$ (this corresponds to a column) using the good algorithm (we can store the results for the previous runs as well).
             \item If we have $minLen[p][c] \le L$, return false.
         \end{itemize}
     \item Return true
@@ -347,18 +447,17 @@ For the binary search, we will use the following approximate predicate for a giv
 \end{claim}
 \begin{proof}
     Suppose we return false. Then we have a path in the rounded instance with cost $c$, and since the number of edges on the path can be at most $n$, and the maximum length we have shaved off an edge by
-    rounding to be $Br/n$
-    rounding to be , we have the path cost at most $B + n \cdot Br / n = B(1 + r)$.\nl
+    rounding to be $Br/n$ (comparing the original costs to the costs we get when we multiply the costs in the instance considered in the algorithm with $Br/n$), we have the path cost at most $B + n \cdot Br / n = B(1 + r)$.\nl
     If we return true, this means that even in the relaxed instance (after scaling and rounding), there is no solution with cost $\le \frac{n}{r}$, i.e., in the relaxed instance where we scale back after
     rounding, there is no solution with cost $\le \frac{n}{r} \cdot \frac{Br}{n} = B$, so even for the original problem, there is no solution with cost $B$, which completes the proof.
 \end{proof}
 
-Hence using this algorithm, we can choose $r = \frac{1}{\sqrt{2}}$, and run this algorithm while doing a binary search on $\log \OPT$, while the ratio between the lower bound and the upper bound is
-not $2$. It will always lead to a reduction of the ratio between by at least a factor of $\sqrt{2}$ each time, i.e., a reduction of $\log$ of the upper bound by at least $\frac{1}{2}$ each time.
-The time taken by the predicate to run is $O(n)$, so we will end up with an $O(n \log (Cn))$ algorithm till we get an upper bound which is at most two times the lower bound.\nl
+Hence using this algorithm, we can choose $r = {\sqrt{2}} - 1$, and run this algorithm while doing a binary search on $\OPT$, while the ratio between the upper bound and the lower bound is
+more than $2$. It will always lead to a reduction of the ratio between by at least a factor of $\sqrt{2}$ each time, i.e., a reduction of $\log$ of the upper bound by at least $\frac{1}{2}$ each time.
+The time taken by the predicate to run is $O(n(n + m) / r) = O(n(n + m))$ (since $r$ is a fixed constant equal to $\sqrt{2} - 1$), so we will end up with an $O(n(n + m) \log (Cn))$ algorithm till we get an upper bound which is at most two times the lower bound.\nl
 Note that since $\log C$ is the size of $C$ in the input, this is polynomial time in input.\nl
 Hence using this algorithm (which in turn depends on the good algorithm), we have finally found an upper bound which is at most twice $\OPT$ (since lower bound is $\le \OPT$), and that too in
-polynomial time.
+polynomial time, as a single iteration of the good algorithm takes time polynomial in $n$ and $1/r$.
 
 Now our FPTAS will be as follows:
 
@@ -393,24 +492,126 @@ Now our FPTAS will be as follows:
     The running time of this algorithm is $O(n(n + m) / \eps)$
 \end{claim}
 \begin{proof}
-    Note that the time taken by the algorithm is $O((n + m) \cdot (\text{upper bound on OPT for the instance passed to the algorithm}))$, which is $O((n + m) \cdot \frac{2n}{\eps})$, and
+    Note that the time taken by the algorithm is\\ $O((n + m) \cdot (\text{upper bound on OPT for the instance passed to the algorithm}))$, which is $O((n + m) \cdot \frac{2n}{\eps})$, and
     we are done.
 \end{proof}
 
 This shows that we indeed have a FPTAS for this final algorithm.
+%Note that we could have used the bound reduction binary search itself for getting a good bound (by choosing a small enough
+%$r$, however that wasn't done just to make the analysis simpler).
 
 \newpage
 
 \section{Problem 4}
 
 \subsection{Statement}
+Consider the following problem arising in communication networks.  The network consists of a cycle on $n$ nodes. Some set $C$ of calls is given:  each call has an originating node and a destination node on this cycle.  Each call can be routed either clockwise or anticlockwise around the cycle and the objective is to route the calls so that the maximum load on any link (edge of the cycle) is minimised. The load on a link is the number of calls routed through it. Give a 2-approximation algorithm for this problem.
+
 \subsection{Solution}
 
+We will assume that the originating and the destination nodes are distinct in each call (since they don't contribute to the load of any link).\nl
+We will use LP relaxation for this problem.\nl
+We number the nodes from $0$ to $n - 1$ in an anticlockwise order, and let link $i$ ($0 \le i < n$) be between nodes $i$ and $(i + 1) \pmod n$.\nl
+Let call $k$ have the originating node $o_k$ and the destination node $d_k$.\nl
+Without loss of generality, we can assume $o_k < d_k$, since a clockwise routing for a call with originating and
+destination nodes $o_k, d_k$ respectively contributes to the same links that an anticlockwise routing for a call with originating and destination nodes $d_k, o_k$ respectively does (so,
+before running the algorithm, we swap these if needed, and given a final assignment, we can check if the original call is from a node with a lower number to a node with a higher number, and if it is not the case, then we simply
+change the direction of the call).\nl
+Now note that for a call $o_k, d_k$, routing it anticlockwise contributes a load of $1$ to each link $i$ with $o_k \le i < d_k$.\nl
+We will set up an integer program as follows. Let the variable $x_{i, 0}$ be $1$ iff the link $i$ is routed anticlockwise, and $0$ otherwise. Let the variable $x_{i, 1}$ be $1$ iff the link $i$ is routed
+clockwise, and $0$ otherwise. Finally, for the answer, we make a variable $y$.\nl
+First we construct an integer program as follows:
+\begin{align*}
+    &\text{Minimize } y \text{ subject to the constraints}\\
+    &\forall \; 1 \le i \le |C|: x_{i, 0} + x_{i, 1} = 1\\
+    &\forall \; 1 \le i \le |C|: x_{i, 0}, x_{i, 1} \in \{0, 1\}\\
+    &\forall \; 0 \le i < n: \sum_{(o_k, d_k) \in C, o_k \le i < d_k} (-1) x_{k, 0} + \sum_{(o_k, d_k) \in C, o_k > i \lor i \ge d_k} (-1) \cdot x_{k, 1} + y \ge 0
+\end{align*}
+The first and the second constraints tell us that we need to assign at least one direction to these. The last constraints say that all loads should be at most $y$.\nl
+Moreover, given a solution to this integer program, we trivially have an assignment which has maximum load $\le y$.\nl
+We now relax it to the following linear program:
+\begin{align*}
+    &\text{Minimize } y \text{ subject to the constraints}\\
+    &\forall \; 1 \le i \le |C|: x_{i, 0} + x_{i, 1} \ge 1\\
+    &\forall \; 1 \le i \le |C|: x_{i, 0} \ge 0\\
+    &\forall \; 1 \le i \le |C|: x_{i, 1} \ge 0\\
+    &\forall \; 0 \le i < n: \sum_{(o_k, d_k) \in C, o_k \le i < d_k} (-1) \cdot x_{k, 0} + \sum_{(o_k, d_k) \in C, o_k > i \lor i \ge d_k} (-1) \cdot x_{k, 1} + y \ge 0
+\end{align*}
+
+Note that if there is a solution to the LP with $x_{i, j} > 1$, we can replace it by $1$ while keeping $y$ the same and not violating any constraint, since we don't decrease the LHS of any
+inequality of the fourth type by this operation, and the second and third types of inequalities are trivially satisfied, and any inequality of the first type in which this variable appears
+would be satisfied since the other variable is $\ge 0$ due to the second and the third inequality.\nl
+Our algorithm (after the above simplifications) would be:
+\begin{enumerate}
+    \item Solve the LP so formed above to get a solution $x^*$, and replace $x^*_i$ by $1$ if it exceeds $1$.
+    \item For each link $i$, if $x^*_{i, 0} \ge \frac{1}{2}$, set $\overline{x}_{i, 0} = 1$ and $\overline{x}_{i, 1} = 0$, and otherwise, do the opposite.
+    \item Corresponding to the integer solution $\overline{x}$, construct a mapping from calls to their direction of routing (also performing the check with the original mapping as described
+        earlier).
+    \item Return this routing scheme.
+\end{enumerate}
+
+Note that by our algorithm, we guarantee that the first two constraints of the integer program are always satisfied.\nl
+
+\begin{claim}
+    For all valid $i, j$, $\overline{x}_{i, j} \le 2 \cdot x^*_{i, j}$.
+\end{claim}
+\begin{proof}
+\begin{enumerate}
+    \item If $x^*_{i, 0} \ge \frac{1}{2}$, we have $\overline{x}_{i, 0} = 1 = 2 \cdot \frac{1}{2} \le 2 \cdot x^*_{i, 0}$, and $\overline{x}_{i, 1} = 0 \le 2 \cdot x^*_{i, 1}$.
+    \item Otherwise, the first constraint tells us that $x^*_{i, 1} \ge \frac{1}{2}$, so the same analysis as the previous case holds.
+\end{enumerate}
+\end{proof}
+
+Note that since this is a relaxed version of the integer program, we have $\OPT \ge y^*$.\nl
+
+
+\begin{claim}
+    This algorithm is a 2-approximation.
+\end{claim}
+\begin{proof}
+    
+Let $\ALG$ be the maximum load on a link in the routing done by the algorithm.
+Note that
+\begin{align*}
+    \ALG &= \max_{0 \le i < n} \left(\sum_{(o_k, d_k) \in C, o_k \le i < d_k} \overline{x}_{k, 0} + \sum_{(o_k, d_k) \in C, o_k > i \lor d_k \le i} \overline{x}_{k, 1}\right)\\
+        &\le \max_{0 \le i <
+n} \left(\sum_{(o_k, d_k) \in C, o_k \le i < d_k} 2 \cdot x^*_{k, 0} + \sum_{(o_k, d_k) \in C, o_k > i \lor d_k \le i} 2 \cdot x^*_{k, 1}\right)\\
+        &= 2 \max_{0 \le i < n} \left(\sum_{(o_k, d_k) \in C, o_k \le i < d_k} x^*_{k, 0} + \sum_{(o_k, d_k) \in C, o_k > i \lor d_k \le i} x^*_{k, 1}\right)\\
+        &\le 2y^*\\
+        &\le 2 \cdot \OPT
+\end{align*}
+
+Here the first inequality comes from our previous observation, the second comes from the fact that $x^*, y^*$ is a feasible solution of the LP, and the last comes from our previous observation
+that this LP is a relaxed version of the integer program.
+\end{proof}
+
+\begin{claim}
+    This is a polynomial-time algorithm.
+\end{claim}
+\begin{proof}
+The time taken by this algorithm is dominated by the time taken to solve the LP (if we use a standard LP solver), which is at most cubic in the number of constraints and variables, i.e., it is $O((n + |C|)^3)$, which is polynomial in the input size.
+\end{proof}
 \newpage
 
 \section{Problem 5}
 
 \subsection{Statement}
+
+Consider the following problem.\nl
+There is a set $U$ of $n$ nodes,  which we can think of as users (e.g.,these are locations that need to access a service, such as a Web server).  You would like to place servers at  multiple
+locations.   Suppose  you  are  given  a  set $S$ of  possible  sites  that  would  be  willing  to  act as  locations  for  the  servers.
+For  each  site $s \in S$,  there  is  a  fee $f_s \ge 0$  for  placing  a  server  at  that location.
+Your  goal  will  be  to  approximately  minimize  the  cost  while  providing  the  service  to  each of  the  customers.   So  far  this  is  very  much  like  the  Set  Cover  Problem:  The  places
+$s$ are  sets,  the weight of sets is $f_s$, and we want to select a collection of sets that covers all users.\nl
+There is one extra complication:  Users $u \in U$ can be served from multiple sites, but there is an associated cost $d_{us}$ forserving user $u$ from site $s$.  When the value $d_{us}$ is very high,
+we do not want to serve user $u$ from site $s$; and in general the service cost $d_{us}$ serves as an incentive to serve customers from ``nearby" servers whenever possible.\nl
+So here is the question, which we call the Facility Location Problem:  Given the sets $U$ and $S$, and costs $f$ and $d$, you need to select a subset $A \subseteq S$ at which to place servers (at a
+cost of $\sum_{s\in A} f_s$), and assign each user $u$ to the active server where it is cheapest to be served, $\min_{s \in A} d_{us}$.\nl
+The goal is to minimize the overall cost $\sum_{s\in A} f_s + \sum_{u \in U} \min_{s \in A} d_{us}$.  Give an $H(n)$-approximation for this problem.
+(Note that if all service costs $d_{us}$ are 0 or infinity, then this problem is exactly the Set Cover Problem: $f_s$ is the cost of the set named $s$, and $d_{us}$ is 0 if node $u$ is in set
+$s$, and infinity otherwise.)
+
 \subsection{Solution}
+
 
 \end{document}
