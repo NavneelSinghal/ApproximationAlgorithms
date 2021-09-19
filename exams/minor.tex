@@ -612,6 +612,69 @@ The goal is to minimize the overall cost $\sum_{s\in A} f_s + \sum_{u \in U} \mi
 $s$, and infinity otherwise.)
 
 \subsection{Solution}
+We assume that $d_{us}$ is non-negative.
+Consider the following algorithm:
+\begin{enumerate}
+    \item Let $X$ be the set of uncovered users, initially $U$.
+    \item While $X$ is non-empty:
+        \begin{itemize}
+            \item For each size $i$ in $\{1, \ldots, |X|\}$, choose the site $s_i$ which has the minimum value of $$\frac{f_i + \sum_{u \in X, u \in \text{ the cheapest $i$ uncovered users to }s_i}
+                d_{us_i}}{i}$$
+                and find the value of $i$ which maximizes this (note that the cheapness is relative to a set, and is given by $d_{us_i}$).
+            \item Add $s_i$ to the answer, and remove all uncovered elements that $s_i$ covers, from $X$.
+        \end{itemize}
+    \item Return the answer.
+\end{enumerate}
 
+Note that this does give a valid assignment, since we cover all users, and this is indeed a polynomial time algorithm.\nl
+
+We claim that this is equivalent to solving the following instance of set cover using the following algorithm:\nl
+\textbf{Instance}:
+\begin{enumerate}
+    \item The universal set is $U$.
+    \item There are $2^{U}$ copies of any site $s \in S$, with each copy being associated to some subset $W$ of $U$, and the cost of this copy being $f_s + \sum_{u \in W} d_{u{s}}$, and
+        this copy covers only elements in $W$. We define $W(copy)$ to be the set associated with a copy.
+\end{enumerate}
+\textbf{Algorithm}:
+\begin{enumerate}
+    \item Let $X$ be $U$.
+    \item While $X$ is non-empty:
+        \begin{itemize}
+            \item Let $c$ be some copy of a site with the minimum ratio $\frac{cost(c)}{|W(c) \cap X|}$
+            \item Add $c$ to the answer, and remove all uncovered elements that $c$ covers from $X$.
+        \end{itemize}
+    \item Return the answer.
+\end{enumerate}
+
+Indeed, given a fixed size of $|W(s_i) \cap X|$, we need to minimize the cost of adding $s_i$, which is $f_i$ plus the cost of covering some subset of elements of $U$. This is minimized when the
+subset of elements covered $W(s_i)$ is $X \cap W(s_i)$ itself. Hence, the greedy step is the same.\nl
+Now we show that solving this instance of set cover is equivalent to the original problem, and then we will show that this instance of set cover gives a $H(n)$ approximation for the
+general weighted set cover problem, which will imply this bound as well.\nl
+\begin{claim}
+    Solving this instance of set cover is equivalent to solving the Facility Location Problem.
+\end{claim}
+\begin{proof}
+    Suppose there is a set cover with a cost $C$. Suppose in that set cover, some two set copies correspond to intersecting subsets of $U$. Then since $d_{us}$ is non-negative, we can remove
+    the intersection from one of the set copies and get a cost at most $C$. After all such possible reductions, we get a partition of $U$ (each partition corresponding to a set that covers elements
+    in it) with a cost at most $C$ (since in that partition, we reassign each element to the closest site, which has a cost $d_{us}$ which is at most the contribution of this element to $C$).\nl
+    Now suppose there is a solution to the original problem with cost $C'$. Then there is a solution to the set cover which has cost precisely $C'$ -- for this, for each user, we assign it to
+    the closest site, and consider, for each site $s \in S$, the copy in the family of sets which corresponds to covering precisely those users whose closest site is $s$.\nl
+    All in all, if we have a min-cost solution for either problem, we can easily construct a min-cost solution for the other problem, which is what our algorithm does as well.
+\end{proof}
+\begin{claim}
+    This algorithm gives an $H(n)$-approximation for the general weighted cover.
+\end{claim}
+\begin{proof}
+    The proof closely mirrors the proof of the case when the weights of sets are the same (i.e., when the cost of a solution is proportional to the number of sets taken into account).\nl
+    Suppose that we assign $cost(c) / (|X \cap W(c)\cdot |H(n))$ to each uncovered element when it is covered for the first time (i.e., to each element in $X \cap W(c)$). Then the total weight we give to all
+    elements is $\frac{\ALG}{H(n)}$.\nl
+    Now consider any copy $c$, and let $w = W(c)$, and suppose $w = \{u_1, \ldots, u_k\}$, and elements are covered in this order. Then, in an optimal solution, the cost of $u_i$ is at most
+    $\frac{cost(c)}{(k - i + 1) \cdot H(n)}$, since otherwise, we could have picked the copy $c$ at the iteration $u_i$ was covered instead to get a better solution. So the total cost of this set
+    is at most $\frac{cost(c)}{H(n)} \sum_{i = 1}^k = \frac{cost(c) \cdot H(k)}{H(n)} \le cost(c)$.\nl
+    Now note that the sum of weights given to all elements is at most the sum of weights counted in the labelled union of the sets in the optimal solution (since each element is counted at
+    least once), which is precisely the total cost of all sets chosen in the optimal solution. Hence, we have $\OPT \ge \frac{\ALG}{H(n)}$, which gives us an $H(n)$-approximation to this
+    instance of set cover.
+\end{proof}
+Since the universal sets for the set cover problem was $U$, we get an $H(|U|) = H(n)$ approximation for the original problem, we are done.
 
 \end{document}
