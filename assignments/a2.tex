@@ -1,0 +1,263 @@
+\documentclass[a4paper]{article}
+\usepackage[english]{babel}
+\usepackage[a4paper,top=2cm,bottom=2cm,left=2cm,right=2cm,marginparwidth=1.75cm]{geometry}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+% \usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{import}
+\usepackage{pdfpages}
+\usepackage{transparent}
+\usepackage{xcolor}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+
+\usepackage{thmtools}
+\usepackage{enumitem}
+\usepackage[framemethod=TikZ]{mdframed}
+
+\usepackage{xpatch}
+
+\usepackage{boites}
+\makeatletter
+\xpatchcmd{\endmdframed}
+{\aftergroup\endmdf@trivlist\color@endgroup}
+{\endmdf@trivlist\color@endgroup\@doendpe}
+{}{}
+\makeatother
+
+%\usepackage[poster]{tcolorbox}
+%\allowdisplaybreaks
+%\sloppy
+
+\usepackage[many]{tcolorbox}
+
+\xpatchcmd{\proof}{\itshape}{\bfseries\itshape}{}{}
+
+% to set box separation
+\setlength{\fboxsep}{0.8em}
+\def\breakboxskip{7pt}
+\def\breakboxparindent{0em}
+
+\newenvironment{proof}{\begin{breakbox}\textit{Proof.}}{\hfill$\square$\end{breakbox}}
+\newenvironment{ans}{\begin{breakbox}\textit{Answer.}}{\end{breakbox}}
+\newenvironment{soln}{\begin{breakbox}\textit{Solution.}}{\end{breakbox}}
+
+% \tcolorboxenvironment{proof}{
+%     blanker,
+%     before skip=\topsep,
+%     after skip=\topsep,
+%     borderline={0.4pt}{0.4pt}{black},
+%     breakable,
+%     left=12pt,
+%     right=12pt,
+%     top=12pt,
+%     bottom=12pt,
+% }
+%
+% \tcolorboxenvironment{ans}{
+%     blanker,
+%     before skip=\topsep,
+%     after skip=\topsep,
+%     borderline={0.4pt}{0.4pt}{black},
+%     breakable,
+%     left=12pt,
+%     right=12pt,
+% }
+
+\mdfdefinestyle{enclosed}{
+    linecolor=black
+    ,backgroundcolor=none
+    ,apptotikzsetting={\tikzset{mdfbackground/.append style={fill=gray!100,fill opacity=.3}}}
+    ,frametitlefont=\sffamily\bfseries\color{black}
+    ,splittopskip=.5cm
+    ,frametitlebelowskip=.0cm
+    ,topline=true
+    ,bottomline=true
+    ,rightline=true
+    ,leftline=true
+    ,leftmargin=0.01cm
+    ,linewidth=0.02cm
+    ,skipabove=0.01cm
+    ,innerbottommargin=0.1cm
+    ,skipbelow=0.1cm
+}
+
+\mdfsetup{%
+    middlelinecolor=black,
+    middlelinewidth=1pt,
+roundcorner=4pt}
+
+\setlength{\parindent}{0pt}
+
+\mdtheorem[style=enclosed]{theorem}{Theorem}
+%\mdtheorem[style=enclosed]{lemma}{Lemma}[theorem]
+%\mdtheorem[style=enclosed]{claim}{Claim}[theorem]
+\mdtheorem[style=enclosed]{lemma}{Lemma}[section]
+\mdtheorem[style=enclosed]{claim}{Claim}[section]
+\mdtheorem[style=enclosed]{ques}{Question}
+\mdtheorem[style=enclosed]{defn}{Definition}
+\mdtheorem[style=enclosed]{notn}{Notation}
+\mdtheorem[style=enclosed]{obs}{Observation}
+\mdtheorem[style=enclosed]{eg}{Example}
+\mdtheorem[style=enclosed]{cor}{Corollary}
+\mdtheorem[style=enclosed]{note}{Note}
+
+% \let\thetheorem=\relax
+% \let\thelemma=\relax
+% \let\theclaim=\relax
+% \let\theques=\relax
+% \let\thedefn=\relax
+% \let\thenotn=\relax
+% \let\theobs=\relax
+% \let\thecor=\relax
+% \let\thenote=\relax
+
+% \renewcommand\qedsymbol{$\blacksquare$}
+\newcommand{\nl}{\vspace{0.2cm}\\}
+\newcommand{\ol}{\overline}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\mc}{\mathcal}
+\newcommand{\mi}{\mathit}
+\newcommand{\mf}{\mathbf}
+\newcommand{\mb}{\mathbb}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\OPT}{\mathbf{OPT}}
+\newcommand{\ALG}{\mathbf{ALG}}
+\renewcommand{\L}{\mc{L}}
+\newcommand{\changesto}{\vdash}
+\newcommand\Vtextvisiblespace[1][.3em]{%
+    \mbox{\kern.06em\vrule height.3ex}%
+    \vbox{\hrule width#1}%
+    \hbox{\vrule height.3ex}
+}
+\newcommand{\blank}{{\Vtextvisiblespace[0.7em]}}
+\newcommand{\leftend}{\triangleright}
+\newcommand{\comp}{\overline}
+
+\newcommand{\incfig}[1]{%
+    \def\svgwidth{\columnwidth}
+    \import{./figures/}{#1.pdf_tex}
+}
+\pdfsuppresswarningpagegroup=1
+
+\title{\textbf{Assignment 2}}
+\author{Navneel Singhal}
+\date{2018CS10360}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\newpage
+
+
+%\begin{algorithmic}[1]
+%    \Function{ApproxSetMulticover}{$U = \{e_1, \ldots, e_n\}$, $\mathcal{S} = \{S_1, \ldots, S_m\}$, $req[1\ldots n]$}
+%        \State Let $X \gets U$ \Comment The set of elements whose requirements haven't been met so far
+%        \State Let $A$ be a multiset of subsets of $U$, initialized to $\emptyset$.
+%        \State Let $f[1\ldots n]$ be an array initialized to all 0s
+%        \Comment $f[i]$ will be the number of copies of $e_i$ covered so far
+%        \While{$X$ is non-empty}
+%            \State Let $S_i$ be a set that covers the most number of elements in $X$
+%            \State Insert $S_i$ into $A$
+%            \For{$e_j$ in $S_i$}
+%                \State $f[j] \gets f[j] + 1$
+%                \If{$f[j] = req[j]$}
+%                    \State Remove $e_j$ from $X$.
+%                \EndIf
+%            \EndFor
+%        \EndWhile
+%        \State \Return $A$
+%    \EndFunction
+%\end{algorithmic}
+
+
+\section{Problem 1}
+\subsection{Statement}
+Consider the following scheduling problem: there are $n$ jobs to be scheduled on a single machine, where each job $j$ has a processing time $p_j$, a weight $w_j$, and a due date $d_j$, $j = 1,
+\ldots, n$. The objective is to schedule the jobs so as to maximise the total weight of jobs that complete by their due date. First prove that there always exists an optimal schedule in which
+all on-time jobs complete before all late jobs and the on-time jobs complete in the earliest due date order. Use this structural result to show how to solve this problem using Dynamic
+Programming in $O(nW)$ time where $W = \sum_j w_j$. Now use this result to derive a fully polynomial-time approximation scheme.
+\subsection{Solution}
+\newpage
+
+\section{Problem 2}
+\subsection{Statement}
+Consider the following scheduling problem: there are $n$ jobs to be scheduled on a constant number of machines $m$, where each job $j$ has a processing time $p_j$, and a weight $w_j$, $j = 1, \ldots, n$.
+Once started,each job must be processed to completion on that machine without interruption. For a given schedule, let $C_j$ denote the completion time of job $j$, $j = 1, \ldots, n$ and the
+objective is to minimise $\sum_j w_j C_j$ over all possible schedules. First show that there exists an optimal schedule where, for each machine, the jobs are scheduled in non-decreasing
+$p_j/w_j$ order. Then use this property to derive a dynamic programming algorithm that can be used to obtain a fully polynomial-time approximation scheme.
+\subsection{Solution}
+\newpage
+
+\section{Problem 3}
+\subsection{Statement}
+In the \emph{directed Steiner tree} problem, we are given as input a directed graph $G = (V, E)$, non-negative costs $c_{ij} \ge 0$ for arcs $(i, j) \in E$, a root vertex $r \in V$, and a set of
+terminals $T \subseteq V$. The goal is to find a minimum-cost tree such that for each $i\in T$ there is a directed path from $r$ to $i$. It is NP-hard to approximate set-cover to a factor better than
+$c\log n$, for some constant $c$, where $n$ is the number of elements. Use this fact to argue that for some constant $d$ there can be no $d \log |T|$-approximation algorithm for the directed Steiner tree problem, unless P = NP.
+\subsection{Solution}
+We claim that any $d < c$ satisfies this property.\nl
+Suppose that there is a $d \log |T|$-approximation algorithm for the directed Steiner tree problem. We shall show that such an algorithm will directly lead to a $d \log n$ algorithm for an instance of
+set cover with $m$ sets $S_1, \ldots, S_m$ and $n$ elements $e_1, \ldots, e_n$.
+\begin{enumerate}
+    \item Construct nodes $v_0$, $v_1, \ldots, v_m$ and $u_1, \ldots, u_n$ in a graph $G$.
+    \item Join $v_0$ to each $v_i$ with an edge of cost $cost(S_i)$.
+    \item For a set $S_i = \{e_{j_1}, \ldots, e_{j_k}\}$, join $v_i$ to $u_{j_1}, \ldots, u_{j_k}$ each with edges of cost $0$.
+    \item Solve the directed Steiner tree problem for the graph $G$ with the costs assigned as above, root vertex $v_0$ and the set of terminals being $\{u_1, \ldots, u_n\}$.
+    \item For each edge of the form $(v_0, v_k)$, add set $S_k$ into the solution.
+    \item Return the solution.
+\end{enumerate}
+
+\begin{claim}
+    This solution is a valid set cover.
+\end{claim}
+
+\begin{proof}
+    Suppose that this is not the case. Then there exists an element $e_i$ which is not covered by the chosen sets. The corresponding vertex $u_i$ is hence not reachable from the root, since any
+    path from $v_0$ to $u_i$ should pass through a $v_j$ such that $e_i$ is in $S_j$, and had we chosen any of these, this would had implied that $S_j$ was in the solution, contradicting that
+    $e_i$ is not covered. So $u_i$ is not reachable from $r$, which is a contradiction to the fact that the algorithm gets a minimum cost tree such that each vertex in the terminal set
+    is reachable from the root $v_0$.
+\end{proof}
+
+\begin{claim}
+    An optimal solution to the constructed instance of directed Steiner tree corresponds to an optimal solution to the associated set cover problem.
+\end{claim}
+
+\begin{proof}
+    We claim that for each solution of set cover with cost $C$, we can construct a solution of this instance of directed Steiner tree with cost $C$ and vice versa.\nl
+    For the first part, let $S_{i_1}, \ldots, S_{i_k}$ be the sets chosen for the set cover. Then add the edges $(v_0, v_{i_r})$ and the edges $(v_{i_r}, u_j)$ for each element $e_j$ in $S_{i_r}$.
+    Note that this is a directed tree since it has no cycles. Now since for each $e_r$ there is a set $S_{i_j}$ such that $e_r \in S_{i_j}$ (by the definition of set cover), there is a path $v_0
+    \to v_{i_j} \to u_r$ from $v_0$ to $u_r$ for each $r$. The cost of this solution is clearly $C$, since the edges between $v_i$'s and $u_j$'s has contribution $0$ to the overall cost, and the
+    contribution of the edge $(v_0, v_{i_j})$ is $cost(S_{i_j})$, and summing it gives the conclusion.\nl
+    For the second part, construct any solution for this instance of directed Steiner tree problem which has cost $C$. Construct the solution in the same way as done in the algorithm above. Since for
+    every vertex $u_i$, there is a path from $v_0$ to $u_i$, there must be a vertex $v_j$ on this path, which corresponds to including the set $S_j$ in the solution. Hence the corresponding
+    solution is a set cover instance. Now note that by a very similar argument as in the previous part, the solution has the same cost.\nl
+    Hence this shows that the optimal solution to the constructed instance of the directed Steiner tree corresponds to an optimal solution to the associated set cover solution.
+\end{proof}
+
+\begin{claim}
+    This solution is a $d \log n$ approximation to the set cover problem.
+\end{claim}
+
+\begin{proof}
+    By the assumption on the algorithm used to solve the directed Steiner tree problem, we know that the cost of the solution to the constructed directed Steiner tree instance is at most $d \log n$ times the cost of
+    the optimal solution to the constructed directed Steiner tree instance. By the claim above, and the claim about the cost of the associated set cover solution having the same cost as the
+    solution to the directed Steiner tree instance, we get the conclusion.
+\end{proof}
+
+However, since this approximation algorithm is a polynomial time algorithm, and it is NP-hard to approximate set cover to a factor better than $c \log n$, this shows that P = NP.
+\newpage
+
+\section{Problem 4}
+\subsection{Statement}
+The \emph{$k$-suppliers} problem is similar to the $k$-center problem discussed in class. The input to the problem is a positive integer $k$, and a metric on a set of points $V$, $|V| = n$. However,
+now the points are partitioned into suppliers $F \subseteq V$ and customers $C=V\setminus F$. The goal is to pick $k$ suppliers such that the maximum distance between a customer and its nearest picked
+supplier is minimized. In other words, we wish to find $S \subseteq F$, $|S| \le k$ that minimizes $\max_{j \in C} d(j, S)$ where $d(j, S)$ is the distance between $j$ and the nearest point in $S$.
+Give a $3$-approximation algorithm for the $k$-suppliers problem.
+\subsection{Solution}
+
+\end{document}
