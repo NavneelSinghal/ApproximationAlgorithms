@@ -299,7 +299,7 @@ the original problem.\nl
 \section{Problem 2}
 \subsection{Statement}
 Consider the following scheduling problem: there are $n$ jobs to be scheduled on a constant number of machines $m$, where each job $j$ has a processing time $p_j$, and a weight $w_j$, $j = 1, \ldots, n$.
-Once started,each job must be processed to completion on that machine without interruption. For a given schedule, let $C_j$ denote the completion time of job $j$, $j = 1, \ldots, n$ and the
+Once started, each job must be processed to completion on that machine without interruption. For a given schedule, let $C_j$ denote the completion time of job $j$, $j = 1, \ldots, n$ and the
 objective is to minimise $\sum_j w_j C_j$ over all possible schedules. First show that there exists an optimal schedule where, for each machine, the jobs are scheduled in non-decreasing
 $p_j/w_j$ order. Then use this property to derive a dynamic programming algorithm that can be used to obtain a fully polynomial-time approximation scheme.
 \subsection{Solution}
@@ -439,6 +439,14 @@ The final algorithm becomes the following:
     Now consider the first $r$ where the algorithm doesn't give a failure. Since no previous distance returned a solution, we must have $r^* \ge r$. However, since the solution returned has the
     distance between any customer to its nearest supplier at most $3r$, the value of $\max_{j \in C} d(j, S)$ is $\le 3r \le 3r^*$, which is $3$ times the optimum. Thus, this is a $3$-approximation,
     as needed.
+\end{proof}
+\begin{claim}
+    This is a polynomial-time algorithm.
+\end{claim}
+\begin{proof}
+    Note that there are at most $O(n^2)$ distinct distances, and sorting would take roughly $O(n^2 \log n)$ (a better bound can be found by considering the size of $F$ etc., but the main goal is
+    just to show that this is a polynomial time algorithm). At each step in the function \textsc{SolveOrFail}, we do $O(n)$ work to find the closest supplier to a customer, and remove all customers
+    that are at a distance of at most $3r$ from this supplier. So overall, this algorithm is $O(n^3)$, which is polynomial time in the problem size.
 \end{proof}
 
 \end{document}
