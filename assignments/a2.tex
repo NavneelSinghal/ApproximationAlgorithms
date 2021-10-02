@@ -183,6 +183,117 @@ Consider the following scheduling problem: there are $n$ jobs to be scheduled on
 all on-time jobs complete before all late jobs and the on-time jobs complete in the earliest due date order. Use this structural result to show how to solve this problem using Dynamic
 Programming in $O(nW)$ time where $W = \sum_j w_j$. Now use this result to derive a fully polynomial-time approximation scheme.
 \subsection{Solution}
+\begin{claim}
+    There exists an optimal schedule in which all on-time jobs complete before all late jobs and the on-time jobs complete in the earliest due date order.
+\end{claim}
+\begin{proof}
+    For the first part, let $S$ be an optimal schedule with jobs $s_j$ in increasing order of starting/ending time (both these orders are equivalent since scheduling is done on a single machine
+    without overlaps).\nl
+    If for some $i < j$, $s_i$ is a late job and $s_j$ is an on-time job, we call $(i, j)$ to be an \emph{inversion}.\nl
+    Among all schedules, wlog that $S$ is one with the minimum number of inversions. If the number of inversions in $S$ is not $0$, then there must be at least one inversion in $S$. It then follows that for some index $i$, there is an inversion of the
+    form $(i, i + 1)$ (since if there wasn't, then either both $i$ and $i + 1$ would have been late or on-time, or $i$ would have been on-time and $i + 1$ would have been late, in which case there
+    is no inversion by induction on the index $i$).\nl
+    Consider the order $S' = s_1, \ldots, s_{i-1}, s_{i+1}, s_i, s_{i+2}\ldots, s_n$ (the prefix and suffix may be empty) which we get from swapping $s_i$ and $s_{i+1}$ in $S$.\nl
+    Note that this is also an optimal schedule, since we are moving an on-time job to earlier, so it stays on-time in the new schedule as well, and the late job remains a late job since we're pushing
+    it to a later time.\nl
+    Note that after this swap, the only pair of indices whose relative order changes is $(i, i + 1)$. So the number of inversions reduces by strictly 1, but this is a contradiction since $S$ was
+    an optimal schedule with the smallest number of inversions.\nl
+    For the second part, let $S$ be an optimal schedule with all the on-time jobs completing before all the late jobs. We call a pair of indices $(i, j)$ a date-inversion if $i < j$ and
+    $d_{s_i} > d_{s_j}$, and $s_i, s_j$ are both on-time jobs. Again, as before, suppose that the least number of date inversions for any optimal schedule with on-time jobs before late jobs is non-zero. Then there exists a date-inversion of
+    the form $(i, i + 1)$ as well. Suppose the time at which job $s_i$ started was $t$. Then we have $t + p_{s_i} \le d_{s_i}$ and $t + p_{s_i} + p_{s_{i+1}} \le d_{s_{i+1}}$. Upon swapping
+    jobs $s_i$ and $s_{i+1}$ in the schedule, note that $t + p_{s_{i+1}} \le t + p_{s_i} + p_{s_{i+1}} \le d_{s_{i+1}}$ and $t + p_{s_i} + p_{s_{i+1}} \le d_{s_{i+1}} < d_{s_i}$, the new schedule
+    so formed is also a valid (and optimal) schedule. Hence we can reduce the number of date-inversions in this case as well, which is a contradiction.\nl
+    This proves the claim.
+\end{proof}
+
+% Algorithm
+%% wlog assume p[j] <= d[j] (else we can never do this job)
+%% dp[i][j] = max weight of all on-time jobs that finish on or before time j taken from the first i elements
+%% if j < d[i], dp[i][j] = max(dp[i][j - 1], dp[i - 1][j])
+%% else dp[i][j] = max(dp[i][j - 1], dp[i - 1][j], w[i] + dp[i - 1][j - p[i]])
+% this is kind of bad since it depends on max due date
+
+%% dp[i][j] = min time taken to get a cost >= j from the first i elements
+%% choose ith element or don't
+%% -> if chosen and dp[i - 1][max(0, j - w[i])] + p[i] <= d[i], then dp[i - 1][max(0, j - w[i])] + p[i]
+%% -> if not chosen, then dp[i - 1][j]
+
+Using this result, we come up with the following algorithm to compute the maximum total weight of jobs we can get; it is straightforward to restore the schedule using the dynamic programming
+table constructed in the solution (note that we can remove all jobs which take more time than their due date, so we can also assume $p_i \le d_i$):
+
+\begin{algorithmic}[1]
+    \Function{Schedule}{$n$, $p[1 \ldots n]$, $w[1 \ldots n]$, $d[1 \ldots n]$}
+        \State Let $W = \sum_{i = 1}^n w[i]$
+        \State Let $dp[0 \ldots n][0 \ldots W]$ be a matrix initialized to all $\infty$s
+        \Comment{$dp[i][j]$ = minimum time taken to get a total weight of at least $j$ from the first $i$ elements}
+        \State $dp[0][0] \gets 0$
+        \For{$i = 1 \ldots n$}
+            \For{$j = 0 \ldots W$}
+                \State $dp[i][j] \gets dp[i - 1][j]$
+                \If{$dp[i - 1][\max(0, j - w[i])] + p[i] \le d[i]$}
+                    \State $dp[i][j] \gets \min(dp[i][j], dp[i - 1][\max(0, j - w[i])] + p[i])$
+                \EndIf
+            \EndFor
+        \EndFor
+        \State \Return the largest $w$ such that $dp[n][w] \ne \infty$ \Comment{To restore the schedule from this, we can reconstruct our choices using the $dp$-matrix}
+    \EndFunction
+\end{algorithmic}
+For a proof of correctness, note that we have the following induction to show that $dp[i][j]$ indeed is the quantity mentioned in the comment.
+\begin{proof}
+    \begin{enumerate}
+        \item Base case: $i = 0$: In this case, we can only get a weight of $0$, so $dp[0][0] = 0$ and $dp[0][w] = \infty$ for $w > 0$, which matches.
+        \item Inductive step: $i > 0$. We have only two choices:
+            \begin{itemize}
+                \item In the case where we choose the $i^\mathrm{th}$ element as an on-time job, we need to check if the minimum time taken to finish this job while having a total weight at
+                    least $j$ is still $\le$ its due date (else this won't be an on-time job), and this condition is sufficient as well. In the case that this condition is true, we only need to
+                    minimum time taken to complete jobs with total weight $\ge j - w[i]$ from the first $i - 1$ elements. Upon noting that time taken can't be negative, we get the transition as in
+                    the algorithm by the inductive hypothesis.
+                \item In the case where we don't choose it, we can simply use the minimum time taken for some of the first $i - 1$ jobs to reach a total weight of $j$ (infinite if impossible),
+                    and this leads to the transition as in the algorithm by the inductive hypothesis.
+            \end{itemize}
+    \end{enumerate}
+    Hence this completes the proof.
+\end{proof}
+Now the answer is the largest $w$ which doesn't take infinite time to be achieved, and we are done. The time taken by the algorithm is $O(nW)$.\nl
+
+The approximation algorithm for a $(1 - \eps)$ approximation is as follows:
+\begin{enumerate}
+    \item Let $w'$ be the maximum weight of a job.
+    \item Replace $w_i$ by $\lfloor\frac{nw_i}{w'\eps}\rfloor$
+    \item Output the schedule returned by the previous algorithm on this instance.
+\end{enumerate}
+Note that this schedule is valid, and since we didn't change the processing time or the due dates, the jobs which are on-time in this solution also remain on-time in the solution corresponding to
+the original problem.\nl
+
+%% Approximation - guarantee
+\begin{claim}
+    This is a $1 - \eps$ approximation.
+\end{claim}
+\begin{proof}
+    Let $\OPT$ be the ordering of the on-time jobs in an optimal schedule for the original problem. Let $\OPT'$ be defined similarly for the modified problem that we return.\nl
+    Then we have the following:
+    \begin{align*}
+        \sum_{j \in \OPT'} w_j &\ge \frac{w' \eps}{n} \sum_{j \in \OPT'} \left\lfloor\frac{nw_j}{w'\eps}\right\rfloor\\
+                        &\ge \frac{w' \eps}{n} \sum_{j \in \OPT} \left\lfloor\frac{nw_j}{w'\eps}\right\rfloor\\
+                        &\ge \frac{w' \eps}{n} \sum_{j \in \OPT} \left(\frac{nw_j}{w'\eps} - 1\right)\\
+                        &= \sum_{j \in \OPT} w_j - w' \eps \frac{|\OPT|}{n}\\
+                        &\ge \sum_{j \in \OPT} w_j - w' \eps
+    \end{align*}
+    Here the first inequality comes from rounding, the second from the fact that $\OPT'$ is an optimal solution to the modified problem, the third from rounding again, and the last one from
+    the fact that we have at most $n$ jobs in $\OPT$.\\
+    Now note that we can always take the maximum element as an on-time job and schedule everything else to be a late job (this is possible since we assume $p_i \le w_i$ for all $i$). This
+    shows that $\sum_{j \in \OPT} w_j \ge w'$. Plugging this into the above inequality, we have:
+    $\sum_{j \in \OPT'} w_j \ge (1 - \eps) \sum_{j \in \OPT} w_j$, and we are done.
+\end{proof}
+
+\begin{claim}
+    The time complexity is $O(n^3 / \eps)$ (and hence this algorithm is a FPTAS).
+\end{claim}
+\begin{proof}
+    The largest weight is reduced to $\lfloor\frac{n}{\eps}\rfloor$, and since the mapping is a non-decreasing function, all weights are at most $\frac{n}{\eps}$. So $W \in O(\frac{n^2}{\eps})$,
+    and the algorithm becomes $O(n^3 / \eps)$, and we are done.
+\end{proof}
+
 \newpage
 
 \section{Problem 2}
@@ -255,9 +366,79 @@ However, since this approximation algorithm is a polynomial time algorithm, and 
 \section{Problem 4}
 \subsection{Statement}
 The \emph{$k$-suppliers} problem is similar to the $k$-center problem discussed in class. The input to the problem is a positive integer $k$, and a metric on a set of points $V$, $|V| = n$. However,
-now the points are partitioned into suppliers $F \subseteq V$ and customers $C=V\setminus F$. The goal is to pick $k$ suppliers such that the maximum distance between a customer and its nearest picked
+now the points are partitioned into suppliers $F \subseteq V$ and customers $C = V \setminus F$. The goal is to pick $k$ suppliers such that the maximum distance between a customer and its nearest picked
 supplier is minimized. In other words, we wish to find $S \subseteq F$, $|S| \le k$ that minimizes $\max_{j \in C} d(j, S)$ where $d(j, S)$ is the distance between $j$ and the nearest point in $S$.
 Give a $3$-approximation algorithm for the $k$-suppliers problem.
 \subsection{Solution}
+The solution will closely mirror the one for the $k$-center problem as done in class.\nl
+Our algorithm will use a predicate on a non-negative real $r$ as follows:
+\begin{enumerate}
+    \item Initialize the solution set to $\{\}$.
+    \item While $C$ is non-empty:
+        \begin{itemize}
+            \item Pick a vertex $v$ from $C$, and consider the closest vertex $s$ to it in $F$. If the distance is more than $r$, return failure.
+            \item Otherwise, consider all vertices in $C$ at a distance of at most $3r$ fom $s$, and remove them from $C$. Add $s$ to the solution set.
+        \end{itemize}
+    \item Return the solution set.
+\end{enumerate}
+\begin{claim}
+    Let $r^*$ be the maximum distance between a customer and its nearest supplier in an optimal solution. If the algorithm returns failure or a solution with $> k$ suppliers, then $r < r^*$, otherwise it
+    returns a solution with at most $k$ suppliers, with the maximum distance between a customer and a supplier being at most $3r$.
+\end{claim}
+\begin{proof}
+    We break the proof into two parts. The second part is obvious, since the solution is valid, and the vertices removed all have a distance of $\le 3r$ from the supplier chosen in that step, so the
+    closest supplier to them in the finally chosen set of suppliers has a distance at most $3r$ as well.\nl
+    For the first part, there are two cases:
+    \begin{enumerate}
+        \item The algorithm returns a failure: In this case, there is a vertex which is at a distance of $> r$ from its nearest supplier. Hence $r^* > r$.
+        \item The algorithm returns a solution with $> k$ suppliers: Suppose for the sake of contradiction that there is indeed a solution where the maximum distance between a customer and its
+            nearest supplier is at most $r$, and the number of suppliers chosen is at most $k$. We show that the minimum number of suppliers that need to be chosen in any solution with maximum distance between a
+        customer and supplier being $\le r$ is $> k$, which will lead to the desired contradiction.\nl
+        Call any solution with the maximum distance between a customer and a supplier being $\le r$ an $r-$covered solution.\nl
+        To this end, we show that for any $r$-covered solution $S$, we can assign a unique supplier belonging to this solution to each of the suppliers in the solution our algorithm returns.\nl
+        Firstly note that at each step, we choose a different supplier, since we always clear out all vertices which are at a distance of at most $3r$ from that supplier, so any other
+        vertex chosen will be at a distance of $> 3r$ from this supplier, and hence this supplier won't be chosen again.\nl
+        Note that at each step, we choose a vertex $v$ corresponding to a new customer. In $S$, there must be a supplier $s'$ for this vertex. We will associate this supplier to the supplier
+        $s$ chosen at this step.\nl
+        Suppose that this supplier is chosen in two distinct steps (i.e., associated to two distinct suppliers picked by the algorithm), where the customers chosen were $u$ and $v$ respectively.
+        Without loss of generality, suppose $v$ was picked before $u$. Then we have $d(u, s) \le d(u, s') + d(s', v) + d(v, s) \le 3r$, where the first two terms are bounded using the fact that
+        $S$ is an $r$-covered solution, and the last term arises from the choice of $s$ when $v$ was picked. This inequality implies that $u$ is indeed removed when $s$ is chosen as the supplier,
+        and this is a contradiction.\nl
+        So we have shown a surjective partial function from the set of suppliers chosen in $S$ to the set of suppliers chosen by the algorithm. Hence the number of suppliers chosen in $S$ is
+        at least the number of suppliers chosen by the algorithm, which is $> k$. Hence for any $r$-covered solution, the number of suppliers in it is more than $k$. Now note that by our
+        assumption, there is a solution where the maximum distance between a customer and a supplier is at most $r$ and the number of suppliers chosen is at most $k$. This is a clear contradiction.\nl
+        Now if $r \ge r^*$, any $r^*$-covered solution is also $r$-covered, hence it must have more than $k$ suppliers. This applies to the optimal solution of the original problem as well, so
+        there should be no solution to the original problem in this case, which is a contradiction. Hence we must have $r < r^*$, since there exists at least one solution to the problem.
+    \end{enumerate}
+    This completes the proof of the first part of the claim as well, and we are done.
+\end{proof}
+
+Call the previous algorithm \textsc{SolveOrFail}$(r)$.\nl
+The final algorithm becomes the following:
+\begin{enumerate}
+    \item For each possible distance $r$ between suppliers and customers (sorted in increasing order):
+        \begin{itemize}
+            \item Call \textsc{SolveOrFail}$(r)$.
+            \item If it returns failure, continue.
+            \item Else, return the solution it returns.
+        \end{itemize}
+\end{enumerate}
+
+\begin{claim}
+    The optimal solution of the problem is equal to one of the distances between the suppliers and the customers.
+\end{claim}
+\begin{proof}
+    This is true since $r^*$ is in fact a distance between a customer and a supplier by definition in the previous claim.
+\end{proof}
+\begin{claim}
+    The algorithm always returns a $3$-approximation for the $k$-suppliers problem.
+\end{claim}
+\begin{proof}
+    Note that there is always an answer: just consider a single supplier; then the answer is in the set of distances between a customer and a supplier, and it is upper bounded by the maximum
+    distance of this supplier from a customer.\nl
+    Now consider the first $r$ where the algorithm doesn't give a failure. Since no previous distance returned a solution, we must have $r^* \ge r$. However, since the solution returned has the
+    distance between any customer to its nearest supplier at most $3r$, the value of $\max_{j \in C} d(j, S)$ is $\le 3r \le 3r^*$, which is $3$ times the optimum. Thus, this is a $3$-approximation,
+    as needed.
+\end{proof}
 
 \end{document}
