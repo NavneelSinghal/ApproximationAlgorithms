@@ -388,11 +388,36 @@ Firstly note that for any $dp[i]$, since all machines have sorted tuples of inte
 equals $\sum_{j = 1}^i p[id[i]]$), the number of elements in $dp[i]$ is $O(T^{m - 1})$ (in fact it would be better than this in practice, and would be at most $O(\binom{T + m - 2}{m - 1})$ which is asymptotically
 the same but has a better constant factor).
 The time complexity is strictly dominated by the loop that fills in $dp[1 \ldots n]$. Searching/inserting/deletion in a red-black tree takes $O(m \log |dp[i]|) \in O(m^2 \log T)$ time. The rest of
-the optations in a single iteration of the loop at line 12 take a total of $O(m \log m)$ time.\nl
+the operations in a single iteration of the loop at line 12 take a total of $O(m \log m)$ time.\nl
 Since there are $m \cdot |dp[i - 1]|$ iterations for each $i$, one iteration of the loop at line 10 takes $O(m^3 T^{m - 1} \log T)$ time. The time taken over all loops is thus $O(n m^3 T^{m - 1}
 \log T)$, which is polynomial in $n$ and $T$, keeping in mind that $m$ is a problem-specified constant.\nl
 
-Now we need to construct a FPTAS based on this solution.\nl
+For this problem, my rounding ideas didn't work out (since the error term is proportional to $T \sum_i w_i$ which might be much larger in order of magnitude than $\OPT$). However, I tried to scale and
+round values of each solution into certain intervals similar to those made in bin-packing to get a not-too-large deviation from $\OPT$. For that, it is necessary to bound the number of keys we
+can have for each value, else the algorithm still remains pseudo-polynomial in the input.\nl
+Now we need to construct a FPTAS based on this solution. Note that this solution works for $m \le M = 2$, I wasn't able to solve for $m > M$.\nl
+Firstly, we claim that if $m \le M$, it is possible to impose a total-order on tuples for a given value.\nl
+For that, we first claim that for any partition of the remaining jobs $A_1, \ldots, A_m$ into $m$ sets, with the total time of each set on a single machine being $a_1, \ldots, a_m$
+respectively, it is optimal to assign the highest $a_i$ to the lowest $t_j$ and so on.\nl
+For a proof, note that the final answer is $O + \sum a_i + \sum_{(i, j) \in S} a_i \cdot t_j$ where $S$ is the set of pairs whose first component is the index of the set $A_i$ and second component is
+the index of the machine to which it is assigned. So by the rearrangement inequality, the result follows.\nl
+Consider two tuples $(t_1, t_2, \ldots, t_m)$ and $(t_1', t_2', \ldots, t_m')$ both in sorted order. Suppose $a_1 \ge \ldots \ge a_m$, without loss of generality. Then the objective value taking
+the first tuple is $\sum_i a_i t_i$ and that for the second tuple is $\sum_i t_i'$. Note that $\sum_i a_i t_i = \sum_i \left((a_i - a_{i+1}) \cdot \sum_{j = 1}^i t_j\right)$, where $a_{m+1}
+= 0$.\nl
+Note that $a_i - a_{i+1} \ge 0$ for all $i$. So in order to claim that the first tuple is better than the second tuple, it is sufficient to say that $\sum_{j = 1}^i t_j \ge \sum_{j = 1}^i t_j'$
+for all $i$. Since the tuple sums are the same, by subtracting this inequality from the tuple sums, it is sufficient to check if the second tuple majorizes the first tuple (when reversed).\nl
+For $m = 2$ this is clear, since we need to only check if $t_2 \le t_2'$ and $t_1 + t_2 = t_1' + t_2'$, which is equivalent to a lexicographical ordering on the original tuples. For $m = 3$, this
+might not be possible since the tuples $(6, 3, 2)$ and $(5, 5, 1)$ are not comparable under the majorization relation.\nl
+The case of $m = 1$ was settled earlier. So for $m = 2$, after we have computed for the answer for all tuples, we can remove all tuples other than the lexicographically smallest tuple for each
+value, and get one tuple per value.\nl
+Then ...
+
+
+%For these purposes, we will first remove all jobs that have $w = 0$, since they can be put at the end of any machine without any increase in objective function value. Now we will rescale all
+%$w_i$'s by the same constant factor so that $w_i \ge 1$ for all $i$. Note that after this rescaling, the input size changes to at most a quadratic function of what it was before, so if we have a
+%FPTAS for this instance, we also have a FPTAS for the original instance.\nl
+%For getting an FPTAS, we scale and round $p[i] \to \left\lfloor\frac{n \cdot p[i]}{T\eps}\right\rfloor$.\nl
+
 
 \newpage
 
