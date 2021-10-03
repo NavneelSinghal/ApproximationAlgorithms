@@ -303,6 +303,97 @@ Once started, each job must be processed to completion on that machine without i
 objective is to minimise $\sum_j w_j C_j$ over all possible schedules. First show that there exists an optimal schedule where, for each machine, the jobs are scheduled in non-decreasing
 $p_j/w_j$ order. Then use this property to derive a dynamic programming algorithm that can be used to obtain a fully polynomial-time approximation scheme.
 \subsection{Solution}
+I will assume that the phrase ``constant number of machines'' implies that the number of machines is not in the input, but rather a part of the problem description.\nl
+\begin{claim}
+    Given a machine, there is an optimal schedule where the jobs on it are scheduled in non-decreasing $p_j / w_j$ order.
+\end{claim}
+\begin{proof}
+    Suppose not. Then any optimal schedule with the least number of inversions (in the array of $p_j / w_j$) has at least one inversion. This also implies that there is an inversion where the
+    relevant indices are adjacent (else by induction, the array of $p_j / w_j$ induced by this ordering is sorted, which is a contradiction).\nl
+    Suppose that there is an inversion at indices $i, i + 1$, i.e., if job $k$ is at the $i^\mathrm{th}$ position, and job $l$ is at the $(i + 1)^\mathrm{th}$ position, then we have $p_k / w_k > p_l
+    / w_l$.
+    Consider what happens when we swap their positions. Since the set of jobs in the prefix of size $j$ where $j < i$ or $j > i + 1$ doesn't change, the change in the objective function is only
+    due to the terms arising from indices $i$ and $i + 1$.\nl
+    The change is $-((C + p_k) \cdot w_k + (C + p_k + p_l) \cdot w_l) + ((C + p_l) \cdot w_l + (C + p_l + p_k) \cdot w_k) = - p_k \cdot w_l + p_l \cdot w_k = w_k w_l \cdot \left(-\frac{p_k}{w_k}
+        +\frac{p_l}{w_l}\right) \le 0$.\nl
+        Hence, swapping leads to one less inversion (since there are no extra inversions added/removed by swapping consecutive positions) and doesn't increase the objective function. This is
+        a contradiction to the fact that we have at least one inversion in any optimal schedule, which completes the proof.
+\end{proof}
+Now we will show a dynamic programming algorithm that can find an optimal solution using this lemma. What follows will work for processing times being real numbers, but we will be able to give a
+good bound on time complexity only when the processing times are integers (or rationals). For integers, rather than a red-black tree, we can use an $m-$dimensional array to make the
+implementation faster.
+\begin{algorithmic}[1]
+    \Function{Schedule}{$n$, $p[1 \ldots n]$, $w[1 \ldots n]$}
+        \State Let $id[1 \ldots n]$ be the order of indices sorted by $p[j] / w[j]$
+        \State Let $T = \sum_{i = 1}^n p[i]$
+        \State Let $dp[0 \ldots n]$ be an array of red-black trees supporting key-value mappings initialized to all empty trees.
+        \State \Comment{$dp[i]$ consists of key-value pairs where the key is the $m$-tuple of completion times of each machine in sorted order, and the value is the minimum objective value
+        corresponding to any configuration with jobs in $id[1 \ldots i]$ with that key. Ordering is lexicographical.}
+        \State Let $parent[1 \ldots n]$ be an array of red-black trees supporting key-value mappings initialized to all empty trees.
+        \State \Comment{$parent[i]$ consists of key-value pairs where the key is the $m-$tuple of completion times of each machine in sorted order, and the value is the tuple of completion times, which when
+        appended by the $id[i]^\mathrm{th}$ job, leads to the key. Ordering is lexicographical here again}
+        \State \Comment{We will represent these balanced binary search trees as sets.}
+        \State $dp[0] \gets \{ ((0, \ldots, 0), 0) \}$
+        \For{$i = 1 \ldots n$}
+            \For{$((t_1, t_2, \ldots, t_m), v)$ in $dp[i - 1]$}
+                \For{$j = 1 \ldots m$}
+                    \State Let $(t_1', \ldots, t_m') = (t_1, \ldots, t_m)$
+                    \State $t_j' \gets t_j + p[id[i]]$
+                    \State Let $v' = v + w[id[i]] \cdot t_j'$
+                    \State Sort the tuple $(t_1', \ldots, t_m')$
+                    \If{$(t_1', \ldots, t_m') \not\in dp[i]$}
+                        \State Insert $((t_1', \ldots, t_m'), v')$ into $dp[i]$
+                        \State Insert $((t_1', \ldots, t_m'), (t_1, \ldots, t_m))$ into $parent[i]$.
+                    \ElsIf{the value of the key $(t_1', \ldots, t_m')$ in $dp[i]$ is $> v'$}
+                        \State Update its value to $v'$
+                        \State Update the value of the key $(t_1', \ldots, t_m')$ in $parent[i]$ to $(t_1, \ldots, t_m)$.
+                    \EndIf
+                \EndFor
+            \EndFor
+        \EndFor
+        %\State Let $S[1 \ldots n]$ be an array of sets, $S[i]$ being the set of jobs assigned to machine $i$ so far. These are all initialized to empty sets.
+        \State Let $l$ be an empty list of $m$-tuples.
+        \State Let $(t_1, \ldots, t_m)$ be a key in $dp[n]$ with the largest value.
+        \For{$i = n \ldots 1$}
+            \State Let $v$ be the value of $(t_1, \ldots, t_m)$ in $dp[i]$.
+            \For{$j = 1 \ldots m$}
+                \State Let $(t_1', \ldots, t_m')$ be the tuple we get after subtracting $p[id[i]]$ from $t_j$ in $(t_1, \ldots, t_m)$.
+                \State Let $v' = v - w[id[i]] \cdot t_j$.
+                \State Sort this tuple.
+                \If{the value of $(t_1', ..., t_m')$ in $dp[i - 1]$ is $v'$}
+                    \State Add $(t_1, \ldots, t_m)$ to the head of $l$.
+                    \State Replace $(t_1, \ldots, t_m)$ with $(t_1', \ldots, t_m')$.
+                    \State Continue
+                \EndIf
+            \EndFor
+        \EndFor
+        \State \Comment{The $i^\mathrm{th}$ tuple in $l$ is the tuple of sorted completion times of all machines in an optimal solution when considering only jobs numbered $id[1 \ldots i]$}
+        \State Assign jobs to the correct machines by simulating the addition and sorting procedure by maintaining a permutation of machine indices at each step.
+        \State Return the solution so formed.
+    \EndFunction
+\end{algorithmic}
+For a brief proof of correctness, note the following:
+\begin{enumerate}
+    \item The correctness of the order of processing the jobs lies in the fact that in the kind of optimal solution we are interested in, for all machines, there is a maximal prefix which has jobs
+        with numbers among $id[1 \ldots i]$ only.
+    \item The proof of correctness of the state transitions in $dp$ is straightforward, and can be done using an induction that relies upon the fact that all configurations of
+        machines come from some previous configuration by appending a job to some prefix, and that the increase in objective function in appending a job with processing time $t$ and
+        weight $w$ to a machine with completion time $C$ is precisely $w \cdot (C + t)$, and that we are essentially finding the minimum of the objective function over all `optimal' ways (for jobs
+        $id[1 \ldots i - 1]$) to reach to a candidate optimal parent configuration and then transition to a new configuration.
+    \item The part of the program from lines 27 to 43 is merely to reconstruct the assignment of the jobs to machines.
+\end{enumerate}
+
+For now, we will assume that the times $p[i]$ are all integers. Let $T = \sum_{i = 1}^n p[i]$. We show that the time taken by the algorithm is polynomial in $n$ and $T$.\nl
+Firstly note that for any $dp[i]$, since all machines have sorted tuples of integers between $0$ to $T$, and each tuple is associated with at most one value, and the sum of tuples is constant (and
+equals $\sum_{j = 1}^i p[id[i]]$), the number of elements in $dp[i]$ is $O(T^{m - 1})$ (in fact it would be better than this in practice, and would be at most $O(\binom{T + m - 2}{m - 1})$ which is asymptotically
+the same but has a better constant factor).
+The time complexity is strictly dominated by the loop that fills in $dp[1 \ldots n]$. Searching/inserting/deletion in a red-black tree takes $O(m \log |dp[i]|) \in O(m^2 \log T)$ time. The rest of
+the optations in a single iteration of the loop at line 12 take a total of $O(m \log m)$ time.\nl
+Since there are $m \cdot |dp[i - 1]|$ iterations for each $i$, one iteration of the loop at line 10 takes $O(m^3 T^{m - 1} \log T)$ time. The time taken over all loops is thus $O(n m^3 T^{m - 1}
+\log T)$, which is polynomial in $n$ and $T$, keeping in mind that $m$ is a problem-specified constant.\nl
+
+Now we need to construct a FPTAS based on this solution.\nl
+
 \newpage
 
 \section{Problem 3}
