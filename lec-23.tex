@@ -305,4 +305,31 @@ Let $F'$ denote the final set of edges.\nl
         separating a pair of terminals $(s_i, t_i)$ and should have requirement $1$ which implies that this set is not inactive at iteration $i$.
     \end{proof}
 \end{proof}
+
+\textbf{Implementation:}\nl
+We'll implement it in a manner similar to Kruskal's algorithm.
+\begin{enumerate}
+    \item Phase 1:
+        \begin{itemize}
+            \item Maintain sets $S_i$ in a union-find data structure.
+            \item In each iteration, find the edge that gets tight first. For this, if next event happens after time $t$, then reduce the cost of every edge incident to exactly one active set by
+                $t$, and that incident to two active sets by $2t$. So we maintain reduced costs $rc[e]$.
+        \end{itemize}
+        - Maintain reduced costs: array which contains reduced cost of each edge, and set $s_1, \ldots, s_k$ corresponding to connected components $C_1, \ldots, C_k$. With each set we have information
+        whether the set is active or not.\nl
+        - For every edge $e = (u, v)$, let $S_i, S_j$ be the sets containing $u, v$ respectively. If both are the same, then skip.\nl
+        - If both are active, then next event time = min(next event time, $rc[e] / 2$), else if one is active, next event time = min(next event time, $rc[e]$).\nl
+        - Update reduced costs: $rc[e] \gets rc[e] -$ next event time / $c$, where $c = 1$ if exactly one is active, and $2$ if both active.\nl
+        - For the edge whose reduced cost became $0$, add it, $e = (u, v)$, to $F$, and join the two components.\nl
+        - Now check if this newly created component is active or not. To do this, check if there is an $i$ such that $(s_i, t_i)$ has exactly one of them in $S$. If there is, then $S$ is active,
+        otherwise it is inactive.
+\end{enumerate}
+
+In an iteration, time taken is $O(|E| + k + \text{time for union})$. Excluding time for unions, we can do it in $O(n(m + k))$.
+Represent each set as a linked list, with every node having a pointer to head (the representative of that set). For find, it's easy (go to head). For union, join smaller set to the larger
+set. Time for union is $O(\min(|S_1|, |S_2|))$.\nl
+Overall this is $O(n \log n)$, since the pointer corresponding to each vertex is modified at most $\log_2 n$ times, since every time it is modified, the size of the set to which the set belongs
+at least doubles.\nl
+So the total time taken is $O((m + k + \log n) n)$.
+
 \end{document}
